@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+  --font-cursive: "La Belle Aurore", "Great Vibes", cursive;
+  --color-brand-dark: #0B192C; /* Prelijepa duboka teget/ponoćno plava iz pozadine logotipa */
+  --color-brand-light: #F9F6F0; /* Rustična topla tekstura lana/papira */
+  --color-brand-teal: #139EB1; /* Sofisticirana tirkizno/cijan boja iz teksta "Cvjećara Šćekić" */
+  --color-brand-pink: #D93B6B; /* Raskošna roze/malina boja iz cvjetnih motiva logotipa */
+  --color-brand-beige: #ECE5DA; /* Tople zemljane linije za prepoznatljivi rustični stil */
+  --color-brand-clay: #8C6D58; /* Rustična topla glina/drvo za savršen balans modernog i prirodnog */
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-brand-light);
+  color: var(--color-brand-dark);
+}
+
+h1, h2, h3, h4, h5, h6, .serif {
+  font-family: var(--font-serif);
+}
+
+.cursive {
+  font-family: var(--font-cursive);
+}

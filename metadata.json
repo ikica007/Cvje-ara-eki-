@@ -1,0 +1,6 @@
+{
+  "name": "Cvjećara Šćekić",
+  "description": "A beautiful landing page for Cvjećara Šćekić with reviews, online booking, and contact information.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
