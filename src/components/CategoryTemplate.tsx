@@ -43,70 +43,20 @@ const COLOR_OPTIONS: Array<{ key: 'roze' | 'crvena' | 'bijela' | 'mix' | 'zuta';
   { key: 'zuta', name: 'Žuto & Narandžasto', bg: 'bg-[#E8B84B]' },
 ];
 
-function reorderColumnMajor(images: string[], cols = 3): string[] {
-  if (!images || images.length <= cols) return images;
-
-  const c0 = Math.ceil(images.length / cols);
-  const c1 = Math.ceil((images.length - c0) / (cols - 1));
-
-  const col0 = images.slice(0, c0);
-  const col1 = images.slice(c0, c0 + c1);
-  const col2 = images.slice(c0 + c1);
-
-  const result: string[] = [];
-  const maxRows = Math.max(col0.length, col1.length, col2.length);
-
-  for (let r = 0; r < maxRows; r++) {
-    if (r < col0.length) result.push(col0[r]);
-    if (r < col1.length) result.push(col1[r]);
-    if (r < col2.length) result.push(col2[r]);
-  }
-
-  return result;
-}
-
 function generateProducts(images: string[], title: string): ProductItem[] {
   const lowerTitle = title.toLowerCase();
 
-  let minPrice = 20;
-  let maxPrice = 80;
-
-  if (lowerTitle.includes('101')) {
-    minPrice = 130;
-    maxPrice = 450;
-  } else if (lowerTitle.includes('xl')) {
-    minPrice = 70;
-    maxPrice = 320;
-  } else if (lowerTitle.includes('korp')) {
-    minPrice = 30;
-    maxPrice = 180;
-  } else if (lowerTitle.includes('box')) {
-    minPrice = 25;
-    maxPrice = 150;
-  } else if (lowerTitle.includes('buket')) {
-    minPrice = 20;
-    maxPrice = 120;
-  } else if (lowerTitle.includes('slatki')) {
-    minPrice = 20;
-    maxPrice = 90;
-  } else if (lowerTitle.includes('kinder')) {
-    minPrice = 15;
-    maxPrice = 65;
-  }
-
-  const orderedImages = reorderColumnMajor(images, 3);
-
-  return orderedImages.map((img, idx) => {
+  return images.map((img, idx) => {
     const formattedNum = String(idx + 1).padStart(2, '0');
     
-    // Get hardcoded price for this specific image index, or fallback
+    // Uzimamo cenu, ako nema cene stavljamo 0
     const priceData = CATEGORY_PRICES[title]?.[idx];
-    const price = priceData ? priceData.price : Math.round((minPrice + (orderedImages.length > 1 ? idx / (orderedImages.length - 1) : 0.5) * (maxPrice - minPrice)) / 5) * 5;
+    const price = priceData !== undefined ? priceData.price : 0;
     const priceSuffix = priceData?.suffix ? ` ${priceData.suffix}` : '';
 
     const imageColorKey = IMAGE_COLORS[img] || 'mix';
     const colorObj = COLOR_OPTIONS.find(c => c.key === imageColorKey) || COLOR_OPTIONS[3];
-    const isBestseller = idx % 3 === 0 || idx === 1;
+    const isBestseller = idx === 0 || idx === 1 || idx % 7 === 0;
     const isSpecial = lowerTitle.includes('101') && (idx === 0 || idx === 1);
     const popularityScore = 100 - idx + (isBestseller ? 50 : 0) + (isSpecial ? 100 : 0);
 
@@ -130,7 +80,6 @@ function generateProducts(images: string[], title: string): ProductItem[] {
 export function CategoryTemplate({ title, description, images, onBack, hidePrices = false }: CategoryTemplateProps) {
   const { addToCart } = useCart();
 
-  // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>('all');
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>('all');
@@ -138,14 +87,9 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
   const [sortBy, setSortBy] = useState<'default' | 'popular' | 'priceAsc' | 'priceDesc'>('default');
   const [bestsellerOnly, setBestsellerOnly] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-
-  // Custom letter state for special bouquets
   const [selectedLetters, setSelectedLetters] = useState<Record<string, string>>({});
 
-  const getSelectedLetter = (productId: string) => {
-    return selectedLetters[productId] || 'A';
-  };
-
+  const getSelectedLetter = (productId: string) => selectedLetters[productId] || 'A';
   const handleLetterChange = (productId: string, letter: string) => {
     setSelectedLetters((prev) => ({ ...prev, [productId]: letter }));
   };
@@ -171,7 +115,7 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
         }
         if (selectedColor !== 'all' && p.colorKey !== selectedColor) return false;
         if (bestsellerOnly && !p.isBestseller) return false;
-        if (p.price > maxPriceLimit) return false;
+        if (p.price > 0 && p.price > maxPriceLimit) return false;
         if (selectedPriceRange === '15to35' && (p.price < 15 || p.price > 35)) return false;
         if (selectedPriceRange === '35to75' && (p.price < 35 || p.price > 75)) return false;
         if (selectedPriceRange === '75to150' && (p.price < 75 || p.price > 150)) return false;
@@ -516,7 +460,7 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
                     </h3>
                     {!hidePrices && (
                       <p className="text-brand-pink font-semibold mt-1 text-base">
-                        {product.price.toFixed(2)} €
+                        {product.price > 0 ? `${product.price.toFixed(2)} €` : 'Na upit'}
                       </p>
                     )}
                   </div>
