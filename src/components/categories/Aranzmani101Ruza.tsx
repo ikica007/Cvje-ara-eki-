@@ -5,8 +5,9 @@ interface Props {
 }
 
 const CLOUDINARY_IMAGES = [
+  // Originalnih 16 slika (stare cijene)
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358055/20250913_093906_sc3vuy.jpg", // 01
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358044/1773157895297919_5991dd52-c4ec-4e6d-83b4-06ab3da73505_ezq6r3.jpg", // 07 (now 02)
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358044/1773157895297919_5991dd52-c4ec-4e6d-83b4-06ab3da73505_ezq6r3.jpg", // 02
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358054/20250622_112952_fni3dr.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358052/Screenshot_20250403_145830_Instagram_ilnikx.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358051/IMG_4243_jbnlcu.jpg",
@@ -20,7 +21,10 @@ const CLOUDINARY_IMAGES = [
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358031/20250621_170749_xnpeil.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358027/20250314_114823_erk51o.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358025/20250312_145259_qdxclt.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358022/1776926505558480_90616993-2e64-4e2c-a12b-b52205cb324b_ia2ptv.jpg"
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358022/1776926505558480_90616993-2e64-4e2c-a12b-b52205cb324b_ia2ptv.jpg",
+  
+  // NOVA slika (na dnu, cijena: Na upit)
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1787240474/17684943482563_649444f9-5a0f-4f64-bcd5-2f4dfa858ab1_ogveey.jpg"
 ];
 
 export function Aranzmani101Ruza({ onBack }: Props) {
