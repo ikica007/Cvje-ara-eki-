@@ -88,7 +88,7 @@ const CLOUDINARY_IMAGES = [
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139138/IMG_4730_z5wweo.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139138/IMG-35dc714f0a470ca1722c86ec6eb5c082-V_amup4h.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139142/IMG_4733_ymb07t.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139139/IMG-20260605-WA0000_cchxap.jpg",
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139139/IMG-20260605-WA0000_cchxap.jpg"
 ];
 
 export function XlXxxlBuketi({ onBack }: Props) {
