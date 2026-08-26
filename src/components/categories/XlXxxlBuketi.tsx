@@ -7,18 +7,17 @@ interface Props {
 const CLOUDINARY_IMAGES = [
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353839/buketi_XL-XXXL29_izek68.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353838/buketi_XL-XXXL27_l0k8vs.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358054/20250622_112952_fni3dr.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353838/buketi_XL-XXXL26_e7zmym.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353836/buketi_XL-XXXL25_e8jfwy.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353835/buketi_XL-XXXL24_itvwjo.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353834/buketi_XL-XXXL22_ovwvj1.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353833/buketi_XL-XXXL21_fmvdra.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353833/buketi_XL-XXXL20_avqfwn.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353832/buketi_XL-XXXL19_n5edv5.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353831/buketi_XL-XXXL18_atc73x.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353830/buketi_XL-XXXL17_p4ljs7.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353830/buketi_XL-XXXL16_y6kpvo.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353829/buketi_XL-XXXL15_lgydrv.jpg",
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353833/buketi_XL-XXXL20_g59hch.jpg",
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353832/buketi_XL-XXXL19_v9t7t2.jpg",
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353831/buketi_XL-XXXL18_drtmke.jpg",
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353830/buketi_XL-XXXL17_ndmsw2.jpg",
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353830/buketi_XL-XXXL16_r932x1.jpg",
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353828/buketi_XL-XXXL15_jixkhe.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353828/buketi_XL-XXXL14_hqlgxx.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353827/buketi_XL-XXXL13_hih3nz.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353826/buketi_XL-XXXL12_rhzyni.jpg",
@@ -89,7 +88,7 @@ const CLOUDINARY_IMAGES = [
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139138/IMG_4730_z5wweo.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139138/IMG-35dc714f0a470ca1722c86ec6eb5c082-V_amup4h.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139142/IMG_4733_ymb07t.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139139/IMG-20260605-WA0000_cchxap.jpg"
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1787139139/IMG-20260605-WA0000_cchxap.jpg",
 ];
 
 export function XlXxxlBuketi({ onBack }: Props) {
