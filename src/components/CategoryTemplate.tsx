@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ShoppingBag, Phone, Search, SlidersHorizontal, Star, RotateCcw, Sparkles, Filter, ZoomIn, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { CATEGORY_PRICES } from '../data/prices';
@@ -35,41 +35,23 @@ const ALPHABET_LETTERS = [
   'O', 'P', 'R', 'S', 'Š', 'T', 'U', 'V', 'Z', 'Ž'
 ];
 
-const COLOR_OPTIONS: Array<{ key: 'roze' | 'crvena' | 'bijela' | 'mix' | 'zuta'; name: string; bg: string }> = [
-  { key: 'roze', name: 'Roze & Pastel', bg: 'bg-[#E8A2A8]' },
-  { key: 'crvena', name: 'Crvene nijanse', bg: 'bg-[#C84B41]' },
-  { key: 'bijela', name: 'Bijela & Krem', bg: 'bg-white border border-brand-dark/20' },
-  { key: 'mix', name: 'Šareno / Mix', bg: 'bg-gradient-to-r from-pink-400 via-amber-300 to-teal-400' },
-  { key: 'zuta', name: 'Žuto & Narandžasto', bg: 'bg-[#E8B84B]' },
-];
+const COLOR_OPTIONS = [
+  { key: 'all', name: 'Sve boje', bg: 'bg-gradient-to-r from-rose-400 via-pink-400 to-red-500' },
+  { key: 'roze', name: 'Nježne Roze', bg: 'bg-pink-300' },
+  { key: 'crvena', name: 'Klasik Crvene', bg: 'bg-red-500' },
+  { key: 'bijela', name: 'Elegantne Bijele', bg: 'bg-white border border-gray-200' },
+  { key: 'zuta', name: 'Žute / Sunčane', bg: 'bg-yellow-400' },
+  { key: 'mix', name: 'Šareni Mix', bg: 'bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400' },
+] as const;
 
-function reorderColumnMajor(images: string[], cols = 3): string[] {
-  if (!images || images.length <= cols) return images;
-
-  const c0 = Math.ceil(images.length / cols);
-  const c1 = Math.ceil((images.length - c0) / (cols - 1));
-
-  const col0 = images.slice(0, c0);
-  const col1 = images.slice(c0, c0 + c1);
-  const col2 = images.slice(c0 + c1);
-
-  const result: string[] = [];
-  const maxRows = Math.max(col0.length, col1.length, col2.length);
-
-  for (let r = 0; r < maxRows; r++) {
-    if (r < col0.length) result.push(col0[r]);
-    if (r < col1.length) result.push(col1[r]);
-    if (r < col2.length) result.push(col2[r]);
-  }
-
-  return result;
-}
-
-function generateProducts(images: string[], title: string): ProductItem[] {
+// Create product list based on imported images and defined prices
+function createProducts(title: string, images: string[]): ProductItem[] {
   const lowerTitle = title.toLowerCase();
-
+  
   return images.map((img, idx) => {
-    const formattedNum = String(idx + 1).padStart(2, '0');
+    // Numeracija u nazivima (01, 02...)
+    const num = idx + 1;
+    const formattedNum = num.toString().padStart(2, '0');
     
     // Uzimamo cenu, ako nema cene stavljamo 0
     const priceData = CATEGORY_PRICES[title]?.[idx];
@@ -78,18 +60,21 @@ function generateProducts(images: string[], title: string): ProductItem[] {
 
     const imageColorKey = IMAGE_COLORS[img] || 'mix';
     const colorObj = COLOR_OPTIONS.find(c => c.key === imageColorKey) || COLOR_OPTIONS[3];
+    
     const isBestseller = idx === 0 || idx === 1 || idx % 7 === 0;
     const isSpecial = lowerTitle.includes('101') && (idx === 0 || idx === 1);
-    const popularityScore = 100 - idx + (isBestseller ? 50 : 0) + (isSpecial ? 100 : 0);
+    
+    // Calculate a deterministic popularity score based on index and features
+    const popularityScore = (isBestseller ? 50 : 0) + (isSpecial ? 30 : 0) + (100 - (idx % 10));
 
     return {
-      id: `${lowerTitle}-${idx}`,
+      id: `${title}-${idx}`,
       index: idx,
       code: `Primjer br. ${formattedNum}`,
       name: isSpecial ? `${title} Specijal (Sa slovom) br. ${formattedNum}${priceSuffix}` : `${title} Aranžman br. ${formattedNum}${priceSuffix}`,
       image: img,
       price,
-      colorKey: colorObj.key,
+      colorKey: colorObj.key as any,
       colorName: colorObj.name,
       colorBg: colorObj.bg,
       isBestseller,
@@ -114,6 +99,9 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
   // Custom letter state for special bouquets
   const [selectedLetters, setSelectedLetters] = useState<Record<string, string>>({});
 
+  // Custom gift state
+  const [selectedGifts, setSelectedGifts] = useState<Record<string, string>>({});
+
   const getSelectedLetter = (productId: string) => {
     return selectedLetters[productId] || 'A';
   };
@@ -122,38 +110,34 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
     setSelectedLetters((prev) => ({ ...prev, [productId]: letter }));
   };
 
+  const handleGiftChange = (productId: string, gift: string) => {
+    setSelectedGifts((prev) => ({ ...prev, [productId]: gift }));
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [title]);
 
-  // Generate products with deterministic metadata
+  const allProducts = useMemo(() => createProducts(title, images), [title, images]);
+
+  // Derived state for filtering and sorting
   const products = useMemo(() => {
-    return generateProducts(images, title);
-  }, [images, title]);
-
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    if (hidePrices) return products;
-
-    return products
+    return allProducts
       .filter((p) => {
-        // Search query filter (by code or name)
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase().trim();
-          const matchesCode = p.code.toLowerCase().includes(q) || String(p.index + 1).includes(q);
-          const matchesName = p.name.toLowerCase().includes(q) || p.colorName.toLowerCase().includes(q);
-          if (!matchesCode && !matchesName) return false;
+        // Search filter
+        if (searchQuery && !p.code.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return false;
         }
-
         // Color filter
         if (selectedColor !== 'all' && p.colorKey !== selectedColor) {
           return false;
         }
-
         // Bestseller filter
         if (bestsellerOnly && !p.isBestseller) {
           return false;
         }
+        
+        if (hidePrices) return true;
 
         // Max price slider limit
         if (p.price > maxPriceLimit) return false;
@@ -173,9 +157,7 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
         if (sortBy === 'popular') return b.popularityScore - a.popularityScore;
         return a.index - b.index; // default by original list index
       });
-  }, [products, searchQuery, selectedColor, selectedPriceRange, maxPriceLimit, sortBy, bestsellerOnly, hidePrices]);
-
-  const hasActiveFilters = searchQuery !== '' || selectedColor !== 'all' || selectedPriceRange !== 'all' || maxPriceLimit < 450 || bestsellerOnly || sortBy !== 'default';
+  }, [allProducts, searchQuery, selectedColor, selectedPriceRange, maxPriceLimit, sortBy, bestsellerOnly, hidePrices]);
 
   const resetFilters = () => {
     setSearchQuery('');
@@ -188,12 +170,23 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
 
   const handleAddToCart = (product: ProductItem) => {
     const chosenLetter = product.isSpecial ? getSelectedLetter(product.id) : undefined;
-    const customName = chosenLetter 
-      ? `${product.name} (Slovo: ${chosenLetter})`
-      : product.name;
+    const hasGiftOption = product.name.toLowerCase().includes('poklon po');
+    const customGift = hasGiftOption ? (selectedGifts[product.id] || '') : undefined;
+
+    let customName = product.name;
+    if (chosenLetter) {
+      customName = `${customName} (Slovo: ${chosenLetter})`;
+    }
+    if (hasGiftOption) {
+      customName = `${customName} ${customGift ? `(Poklon: ${customGift})` : '(Nije upisan poklon)'}`;
+    }
+
+    let cartId = product.id;
+    if (chosenLetter) cartId += `-${chosenLetter}`;
+    if (hasGiftOption && customGift) cartId += `-${customGift.replace(/\s+/g, '-')}`;
 
     addToCart({
-      id: chosenLetter ? `${product.id}-${chosenLetter}` : product.id,
+      id: cartId,
       name: customName,
       price: product.price,
       image: product.image,
@@ -227,55 +220,36 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
           <p className="text-brand-dark/75 font-serif max-w-2xl mx-auto text-lg leading-relaxed font-light">
             {description}
           </p>
-          {hidePrices && (
-            <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-pink/10 border border-brand-pink/30 text-brand-pink text-xs font-semibold uppercase tracking-widest shadow-sm">
-              <Phone className="w-4 h-4 shrink-0" />
-              <span>Ponude i cijene dekoracija se formiraju po vašem upitu • Pozovite 069 108 055</span>
-            </div>
-          )}
-          <div className="w-16 h-[1px] bg-brand-pink/30 mx-auto mt-6" />
         </motion.div>
 
-        {/* FILTER CONTROL BAR - Only shown for orderable product categories (!hidePrices) */}
-        {!hidePrices && products.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mb-12 bg-[#F4EFE6]/90 border border-brand-beige p-5 rounded-[2.2rem] shadow-[0_4px_20px_-10px_rgba(140,109,88,0.08)] space-y-5"
-          >
-            {/* Top row: Search, Sort, Bestseller toggle */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-              {/* Search Bar */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-brand-dark/40" />
+        {/* Filter Toolbar */}
+        <div className="mb-10 bg-white/60 backdrop-blur-md rounded-3xl p-5 md:p-6 shadow-sm border border-brand-pink/20">
+          <div className="flex flex-col gap-6">
+            
+            {/* Top row: Search and Sort */}
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              
+              {/* Search */}
+              <div className="relative w-full md:w-auto md:min-w-[280px]">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-brand-dark/40" />
+                </div>
                 <input
                   type="text"
+                  placeholder="Pretraži po broju (npr. '05')"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Pretraži po broju npr. 05..."
-                  className="w-full bg-white border border-brand-beige/80 rounded-full pl-11 pr-4 py-2.5 text-xs text-brand-dark placeholder-brand-dark/40 focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink/30 transition-all font-medium"
+                  className="w-full bg-white text-brand-dark text-sm rounded-full pl-10 pr-4 py-3 border border-brand-beige focus:outline-none focus:border-brand-pink focus:ring-1 focus:ring-brand-pink transition-colors"
                 />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-brand-dark/40 hover:text-brand-dark"
-                  >
-                    ×
-                  </button>
-                )}
               </div>
 
-              {/* Controls right: Sort & Bestseller */}
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Sort dropdown */}
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-brand-beige/80">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-brand-pink" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-brand-dark/50 hidden sm:inline">Sortiranje:</span>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-brand-beige w-full md:w-auto">
+                  <SlidersHorizontal className="w-4 h-4 text-brand-dark/60" />
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-transparent text-xs text-brand-dark font-medium focus:outline-none cursor-pointer pr-1"
+                    className="bg-transparent text-sm font-medium text-brand-dark focus:outline-none w-full cursor-pointer appearance-none pr-4"
                   >
                     <option value="default">Redoslijed (01, 02, 03...)</option>
                     <option value="popular">Najpopularniji</option>
@@ -287,160 +261,143 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
                 {/* Bestseller toggle */}
                 <button
                   onClick={() => setBestsellerOnly(!bestsellerOnly)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-300 border ${
-                    bestsellerOnly
-                      ? 'bg-brand-pink text-white border-brand-pink shadow-sm'
-                      : 'bg-white text-brand-dark/70 border-brand-beige/80 hover:border-brand-pink/40'
+                  className={`flex items-center justify-center w-11 h-11 shrink-0 rounded-full transition-all border ${
+                    bestsellerOnly 
+                      ? 'bg-amber-100 border-amber-300 text-amber-600 shadow-sm' 
+                      : 'bg-white border-brand-beige text-brand-dark/40 hover:bg-gray-50'
                   }`}
+                  title="Prikaži samo najpopularnije"
                 >
-                  <Star className={`w-3.5 h-3.5 ${bestsellerOnly ? 'fill-white text-white' : 'text-amber-500 fill-amber-500'}`} />
-                  <span>Bestseller</span>
+                  <Star className={`w-5 h-5 ${bestsellerOnly ? 'fill-amber-500' : ''}`} />
                 </button>
               </div>
             </div>
 
-            {/* Filter rows: Color & Price Range */}
-            <div className="pt-3 border-t border-brand-beige/60 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              {/* Color filter pills */}
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-dark/50 block font-bold">
-                  Filter po boji cvijeća:
-                </span>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button
-                    onClick={() => setSelectedColor('all')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      selectedColor === 'all'
-                        ? 'bg-brand-dark text-white font-semibold shadow-sm'
-                        : 'bg-white text-brand-dark/70 hover:bg-white/80 border border-brand-beige/60'
-                    }`}
-                  >
-                    Sve boje
-                  </button>
-                  {COLOR_OPTIONS.map((c) => (
-                    <button
-                      key={c.key}
-                      onClick={() => setSelectedColor(selectedColor === c.key ? 'all' : c.key)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                        selectedColor === c.key
-                          ? 'bg-brand-dark text-white border-brand-dark font-semibold shadow-sm'
-                          : 'bg-white text-brand-dark/75 hover:border-brand-pink/40 border-brand-beige/60'
-                      }`}
-                    >
-                      <span className={`w-2.5 h-2.5 rounded-full ${c.bg} shrink-0`} />
-                      <span>{c.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+            {/* Colors Scrollable Row */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none -mx-2 px-2 md:mx-0 md:px-0">
+              {COLOR_OPTIONS.map((color) => (
+                <button
+                  key={color.key}
+                  onClick={() => setSelectedColor(color.key)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap shrink-0 border ${
+                    selectedColor === color.key
+                      ? 'bg-brand-dark text-white border-brand-dark shadow-md'
+                      : 'bg-white text-brand-dark/70 border-brand-beige hover:bg-brand-pink/5 hover:border-brand-pink/30'
+                  }`}
+                >
+                  <span className={`w-3 h-3 rounded-full shadow-sm ${color.bg}`} />
+                  {color.name}
+                </button>
+              ))}
+            </div>
 
-              {/* Price range pills & Slider */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-dark/50 block font-bold">
-                    Budžet / Raspon cijena (15 € - 450 €):
-                  </span>
-                  <span className="text-xs font-semibold text-brand-teal bg-brand-teal/10 px-2.5 py-0.5 rounded-full border border-brand-teal/20">
-                    Maks: do {maxPriceLimit} €
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {[
-                    { id: 'all', label: 'Sve cijene' },
-                    { id: '15to35', label: '15 € - 35 €' },
-                    { id: '35to75', label: '35 € - 75 €' },
-                    { id: '75to150', label: '75 € - 150 €' },
-                    { id: '150to300', label: '150 € - 300 €' },
-                    { id: '300to450', label: '300 € - 450 €' },
-                  ].map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => setSelectedPriceRange(selectedPriceRange === p.id ? 'all' : p.id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                        selectedPriceRange === p.id
-                          ? 'bg-brand-teal text-white border-brand-teal font-semibold shadow-sm'
-                          : 'bg-white text-brand-dark/75 hover:border-brand-teal/40 border-brand-beige/60'
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Range slider for smooth custom max budget filtering */}
-                <div className="pt-2 flex items-center gap-3">
-                  <span className="text-[10px] font-mono text-brand-dark/50">15 €</span>
+            {/* Prices filtering area */}
+            {!hidePrices && (
+              <div className="flex flex-col md:flex-row gap-6 pt-4 border-t border-brand-beige/50">
+                
+                {/* Max price slider */}
+                <div className="flex-1 max-w-sm">
+                  <div className="flex justify-between items-end mb-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-brand-dark/70">
+                      Cijena do:
+                    </label>
+                    <span className="text-brand-pink font-semibold text-lg">{maxPriceLimit} €</span>
+                  </div>
                   <input
                     type="range"
-                    min="15"
+                    min="10"
                     max="450"
                     step="5"
                     value={maxPriceLimit}
-                    onChange={(e) => setMaxPriceLimit(Number(e.target.value))}
-                    className="w-full accent-brand-teal cursor-pointer h-1.5 bg-brand-beige/80 rounded-lg appearance-none"
+                    onChange={(e) => {
+                      setMaxPriceLimit(Number(e.target.value));
+                      setSelectedPriceRange('all'); // reset pills if using slider
+                    }}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-pink"
                   />
-                  <span className="text-[10px] font-mono text-brand-dark/50">450 €</span>
                 </div>
-              </div>
-            </div>
 
-            {/* Active filters status bar */}
-            {hasActiveFilters && (
-              <div className="pt-3 border-t border-brand-beige/60 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 text-brand-dark/70 font-medium">
-                  <Filter className="w-3.5 h-3.5 text-brand-pink" />
-                  <span>
-                    Prikazano <strong className="text-brand-dark font-bold">{filteredProducts.length}</strong> od {products.length} aranžmana
-                  </span>
+                {/* Price range pills */}
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-none flex-1">
+                  {[
+                    { key: 'all', label: 'Sve cijene' },
+                    { key: '15to35', label: '15€ - 35€' },
+                    { key: '35to75', label: '35€ - 75€' },
+                    { key: '75to150', label: '75€ - 150€' },
+                    { key: '150to300', label: '150€ - 300€' },
+                  ].map((range) => (
+                    <button
+                      key={range.key}
+                      onClick={() => {
+                        setSelectedPriceRange(range.key);
+                        setMaxPriceLimit(450); // reset slider if using pills
+                      }}
+                      className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
+                        selectedPriceRange === range.key
+                          ? 'bg-brand-pink/10 text-brand-pink border-brand-pink shadow-sm'
+                          : 'bg-white text-brand-dark/60 border-brand-beige hover:bg-gray-50'
+                      }`}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
                 </div>
+
+                {/* Reset filters button */}
                 <button
                   onClick={resetFilters}
-                  className="flex items-center gap-1 text-brand-pink hover:text-brand-dark font-semibold uppercase tracking-wider text-[11px] transition-colors"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider text-brand-clay hover:text-brand-dark hover:bg-white border border-transparent hover:border-brand-beige transition-all self-start md:self-end mt-2 md:mt-0"
                 >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>Poništi filtere</span>
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Poništi sve
                 </button>
               </div>
             )}
-          </motion.div>
-        )}
+          </div>
+        </div>
 
-        {/* PRODUCTS GRID */}
-        {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProducts.map((product, idx) => (
+        {/* Results Info */}
+        <div className="mb-6 flex justify-between items-center px-2">
+          <p className="text-sm font-medium text-brand-dark/60">
+            Prikazano <span className="text-brand-dark font-bold">{products.length}</span> aranžmana
+          </p>
+        </div>
+
+        {products.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
+            {products.map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, scale: 0.96 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: (idx % 3) * 0.08 }}
-                className="group relative overflow-hidden rounded-[2.5rem] bg-[#F4EFE6]/50 border border-brand-beige/60 p-2.5 shadow-[0_4px_25px_-10px_rgba(140,109,88,0.06)] hover:bg-[#F4EFE6]/80 hover:border-brand-pink/25 hover:shadow-[0_15px_30px_-10px_rgba(140,109,88,0.12)] transition-all duration-500 flex flex-col justify-between h-full"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
+                className="group relative"
               >
                 {product.image ? (
-                  <div className="overflow-hidden rounded-[1.8rem] w-full relative aspect-[4/5] bg-brand-beige/20">
-                    <img 
-                      src={optimizeCloudinaryUrl(product.image, 600)} 
-                      referrerPolicy="no-referrer"
-                      alt={product.name} 
+                  <div 
+                    className="relative w-full aspect-[4/5] rounded-[1.8rem] overflow-hidden bg-[#F4EFE6] cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500"
+                    onClick={() => setZoomedImage(product.image)}
+                  >
+                    <img
+                      src={optimizeCloudinaryUrl(product.image, 600)}
+                      alt={product.code}
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-brand-dark/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                     
-                    {/* Zoom button */}
-                    <button 
-                      onClick={() => setZoomedImage(product.image)}
-                      className="absolute inset-0 m-auto w-12 h-12 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white/50 hover:scale-110 z-20 border border-white/40 shadow-xl"
-                      title="Uveličaj sliku"
-                    >
-                      <ZoomIn className="w-5 h-5 drop-shadow-md" />
-                    </button>
+                    {/* Dark gradient overlay for better text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 opacity-60 transition-opacity group-hover:opacity-40" />
 
-                    {/* Bestseller badge */}
-                    {product.isBestseller && !hidePrices && (
-                      <div className="absolute top-4 left-4 bg-brand-dark/85 backdrop-blur-md text-white text-[10px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 border border-white/20 shadow-sm z-10">
+                    {/* Zoom Icon Hint */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                      <div className="bg-black/30 backdrop-blur-sm p-4 rounded-full text-white">
+                        <ZoomIn className="w-8 h-8" />
+                      </div>
+                    </div>
+
+                    {/* Bestseller Badge */}
+                    {product.isBestseller && (
+                      <div className="absolute top-4 left-4 bg-brand-dark/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 border border-white/20 shadow-sm z-10">
                         <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                         <span>Bestseller</span>
                       </div>
@@ -468,6 +425,23 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
                   </div>
                 )}
                 
+                {/* Gift input for specific products */}
+                {!hidePrices && product.name.toLowerCase().includes('poklon po') && (
+                  <div className="mt-3 bg-white/90 border border-brand-pink/30 rounded-2xl p-3 shadow-sm">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-brand-dark flex items-center gap-1.5 mb-2">
+                      <Sparkles className="w-3.5 h-3.5 text-brand-pink" />
+                      Napišite poklon po želji:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Npr. Rafaello, vino..."
+                      value={selectedGifts[product.id] || ''}
+                      onChange={(e) => handleGiftChange(product.id, e.target.value)}
+                      className="w-full bg-[#F4EFE6] text-brand-dark font-medium text-xs px-3 py-2.5 rounded-xl border border-brand-pink/40 focus:outline-none focus:ring-2 focus:ring-brand-pink"
+                    />
+                  </div>
+                )}
+
                 {/* Letter selector for Special bouquets */}
                 {product.isSpecial && !hidePrices && (
                   <div className="mt-3 bg-white/90 border border-brand-pink/30 rounded-2xl p-3 shadow-sm">
@@ -527,6 +501,7 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
                       </p>
                     )}
                   </div>
+
                   {!hidePrices ? (
                     <button 
                       onClick={() => handleAddToCart(product)}
@@ -564,6 +539,15 @@ export function CategoryTemplate({ title, description, images, onBack, hidePrice
           </div>
         )}
       </div>
+
+      {/* Floating Back Button */}
+      <button 
+        onClick={onBack}
+        className="fixed bottom-6 left-4 md:left-8 z-40 bg-white/90 backdrop-blur shadow-lg hover:shadow-xl border border-brand-pink/20 hover:border-brand-pink/50 text-brand-dark w-12 h-12 rounded-full flex items-center justify-center transition-all group"
+        title="Nazad na kategorije"
+      >
+        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-brand-pink" />
+      </button>
 
       {/* Zoom Modal */}
       <AnimatePresence>
