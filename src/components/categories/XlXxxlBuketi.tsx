@@ -7,6 +7,7 @@ interface Props {
 const CLOUDINARY_IMAGES = [
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353839/buketi_XL-XXXL29_izek68.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353838/buketi_XL-XXXL27_l0k8vs.jpg",
+  "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358054/20250622_112952_fni3dr.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353838/buketi_XL-XXXL26_e7zmym.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353836/buketi_XL-XXXL25_e8jfwy.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353835/buketi_XL-XXXL24_itvwjo.jpg",
