@@ -41,7 +41,6 @@ const CLOUDINARY_IMAGES = [
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787048647/IMG-20260604-WA0005_1_iwb3f8.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787048646/1781721814445836_6d8aac36-6743-4417-8060-20eebeedd2d7_ybq6kt.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787048646/1781721814632462_54ec0010-96c3-4f6a-8ec2-0c8a0469fa01_pzstur.jpg",
-  "https://res.cloudinary.com/de7gefkxl/image/upload/v1787048645/1777909147813446_a23a463d-7099-4168-8927-0e9b2f07a34b_rkwgim.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787048645/1781526465908035_8fff623f-5cf9-4372-a3a2-0d5955c48c55_fhihpv.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787048645/1781721812491669_baaf08dd-bd01-4ea5-8244-913940d72c79_maghnr.jpg",
   "https://res.cloudinary.com/de7gefkxl/image/upload/v1787048645/1779892457433496_349a43dc-97ad-4e63-b7d3-ecd70d7bb494_mi7x8d.jpg",
