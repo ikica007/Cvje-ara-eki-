@@ -2,9 +2,9 @@ import { izracunajTotal } from './_katalog.js';
 
 const USER_AGENT = 'CvjecaraScekic/1.0 (+https://cvjecarascekic.vercel.app)';
 
-export default async function handler(request) {
-  if (request.method !== 'POST') {
-    return json({ greska: 'Dozvoljen je samo POST.' }, 405);
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ greska: 'Dozvoljen je samo POST.' });
   }
 
   const env = {
@@ -22,27 +22,20 @@ export default async function handler(request) {
 
   if (nedostaje.length) {
     console.error('Nedostaju env varijable:', nedostaje.join(', '));
-    return json({ greska: 'Plaćanje trenutno nije dostupno.' }, 500);
+    return res.status(500).json({ greska: 'Plaćanje trenutno nije dostupno.' });
   }
 
-  let tijelo;
-  try {
-    tijelo = await request.json();
-  } catch {
-    return json({ greska: 'Neispravan zahtjev.' }, 400);
-  }
-
-  const { korpa, kupac } = tijelo ?? {};
+  const { korpa, kupac } = req.body ?? {};
 
   let total;
   try {
     total = izracunajTotal(korpa);
   } catch (e) {
-    return json({ greska: e.message }, 400);
+    return res.status(400).json({ greska: e.message });
   }
 
   if (!kupac?.email || !String(kupac.email).includes('@')) {
-    return json({ greska: 'Email je obavezan.' }, 400);
+    return res.status(400).json({ greska: 'Email je obavezan.' });
   }
 
   const reference = `CS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -64,7 +57,7 @@ export default async function handler(request) {
 
     if (!tokenRes.ok) {
       console.error('Token greška:', tokenRes.status, await tokenRes.text());
-      return json({ greska: 'Plaćanje trenutno nije dostupno.' }, 502);
+      return res.status(502).json({ greska: 'Plaćanje trenutno nije dostupno.' });
     }
 
     const { access_token } = await tokenRes.json();
@@ -98,18 +91,18 @@ export default async function handler(request) {
 
     if (!hppRes.ok) {
       console.error('HPP greška:', hppRes.status, await hppRes.text());
-      return json({ greska: 'Plaćanje trenutno nije dostupno.' }, 502);
+      return res.status(502).json({ greska: 'Plaćanje trenutno nije dostupno.' });
     }
 
     const { redirect_url, session_id } = await hppRes.json();
 
     console.log('Sesija kreirana:', { reference, session_id, amount: total.amount });
 
-    return json({ redirect_url, reference });
+    return res.status(200).json({ redirect_url, reference });
 
   } catch (e) {
     console.error('Neočekivana greška:', e);
-    return json({ greska: 'Plaćanje trenutno nije dostupno.' }, 500);
+    return res.status(500).json({ greska: 'Plaćanje trenutno nije dostupno.' });
   }
 }
 
@@ -120,11 +113,4 @@ function cist(vrijednost, maxDuzina) {
     .replace(/\.\.\//g, '')
     .trim()
     .slice(0, maxDuzina) || undefined;
-}
-
-function json(podaci, status = 200) {
-  return new Response(JSON.stringify(podaci), {
-    status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-  });
 }
