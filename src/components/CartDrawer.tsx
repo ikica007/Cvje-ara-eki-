@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, ShoppingBag, Truck } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, Truck, CreditCard } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export function CartDrawer() {
   const { isCartOpen, setIsCartOpen, cart, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'pouzecem' | 'karticom'>('pouzecem');
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -35,7 +36,8 @@ export function CartDrawer() {
       message += `${item.quantity}x ${item.name} - ${(item.price * item.quantity).toFixed(2)} €\n`;
     });
     
-    message += `\n*Ukupno za naplatu:* ${totalPrice.toFixed(2)} € (Plaćanje pouzećem)\n`;
+    const paymentText = paymentMethod === 'karticom' ? 'Plaćanje karticom' : 'Plaćanje pouzećem';
+    message += `\n*Ukupno za naplatu:* ${totalPrice.toFixed(2)} € (${paymentText})\n`;
     
     // Encode the message for the URL
     const encodedMessage = encodeURIComponent(message);
@@ -72,30 +74,27 @@ export function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-brand-light shadow-2xl z-[70] flex flex-col"
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-[#F4EFE6] shadow-2xl z-[70] flex flex-col"
           >
-            <div className="flex items-center justify-between p-6 border-b border-brand-beige/60">
-              <h2 className="serif text-2xl font-semibold text-brand-dark flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5" />
-                Vaša Korpa
-              </h2>
+            <div className="flex items-center justify-between p-6 border-b border-brand-beige/60 bg-white">
+              <h2 className="serif text-2xl text-brand-dark font-medium">Tvoja Korpa</h2>
               <button 
                 onClick={closeDrawer}
-                className="p-2 hover:bg-brand-beige/30 rounded-full transition-colors text-brand-dark"
+                className="text-brand-dark/50 hover:text-brand-pink transition-colors p-2 hover:bg-brand-pink/10 rounded-full"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 scrollbar-none">
               {orderSuccess ? (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                  <div className="w-16 h-16 bg-brand-teal/20 text-brand-teal rounded-full flex items-center justify-center mb-4">
-                    <Truck className="w-8 h-8" />
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <div className="w-16 h-16 bg-brand-teal/20 text-brand-teal rounded-full flex items-center justify-center mb-6">
+                    <ShoppingBag className="w-8 h-8" />
                   </div>
-                  <h3 className="serif text-3xl font-semibold text-brand-dark">Preusmjeravanje...</h3>
-                  <p className="text-brand-dark/70 font-light">
-                    Uskoro ćete biti preusmjereni na WhatsApp kako biste potvrdili i poslali vašu narudžbu.
+                  <h3 className="serif text-2xl text-brand-dark mb-3">Hvala na povjerenju!</h3>
+                  <p className="text-brand-dark/70 text-sm max-w-[250px] mb-8 font-serif font-light">
+                    Tvoja narudžba je preusmjerena na WhatsApp gdje ćemo dogovoriti sve detalje oko dostave.
                   </p>
                   <button 
                     onClick={closeDrawer}
@@ -110,7 +109,7 @@ export function CartDrawer() {
                   <p className="uppercase tracking-[0.2em] text-sm font-bold">Korpa je prazna</p>
                 </div>
               ) : isCheckingOut ? (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form id="checkout-form" onSubmit={handleSubmit} className="space-y-4">
                   <h3 className="uppercase tracking-widest text-xs font-bold text-brand-dark/70 mb-6">Podaci za dostavu</h3>
                   
                   <div>
@@ -169,14 +168,62 @@ export function CartDrawer() {
                     />
                   </div>
 
-                  <div className="mt-8 bg-[#F4EFE6] p-4 rounded-xl border border-brand-beige/60">
-                    <div className="flex items-center gap-3 text-brand-dark mb-2">
-                      <Truck className="w-5 h-5 text-brand-teal" />
-                      <span className="font-semibold text-sm uppercase tracking-widest">Plaćanje pouzećem</span>
-                    </div>
-                    <p className="text-xs text-brand-dark/70">
-                      Iznos od {totalPrice.toFixed(2)} € plaćate gotovinom kuriru prilikom preuzimanja pošiljke. <strong>Cijena dostave je uračunata.</strong>
-                    </p>
+                  <div className="mt-6 space-y-3">
+                    <label className="block text-xs uppercase tracking-widest text-brand-dark mb-2">Način plaćanja</label>
+                    
+                    {/* Opcija 1: Pouzećem */}
+                    <label 
+                      className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                        paymentMethod === 'pouzecem' 
+                          ? 'border-brand-pink bg-[#F4EFE6]' 
+                          : 'border-brand-beige/60 bg-white hover:border-brand-pink/50'
+                      }`}
+                    >
+                      <input 
+                        type="radio" 
+                        name="paymentMethod" 
+                        value="pouzecem"
+                        checked={paymentMethod === 'pouzecem'}
+                        onChange={() => setPaymentMethod('pouzecem')}
+                        className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2 text-brand-dark mb-1">
+                          <Truck className="w-4 h-4 text-brand-teal" />
+                          <span className="font-semibold text-sm uppercase tracking-widest">Plaćanje pouzećem</span>
+                        </div>
+                        <p className="text-xs text-brand-dark/70">
+                          Iznos od {totalPrice.toFixed(2)} € plaćate gotovinom kuriru prilikom preuzimanja pošiljke. <strong>Cijena dostave je uračunata.</strong>
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Opcija 2: Karticom */}
+                    <label 
+                      className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                        paymentMethod === 'karticom' 
+                          ? 'border-brand-pink bg-[#F4EFE6]' 
+                          : 'border-brand-beige/60 bg-white hover:border-brand-pink/50'
+                      }`}
+                    >
+                      <input 
+                        type="radio" 
+                        name="paymentMethod" 
+                        value="karticom"
+                        checked={paymentMethod === 'karticom'}
+                        onChange={() => setPaymentMethod('karticom')}
+                        className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2 text-brand-dark mb-1">
+                          <CreditCard className="w-4 h-4 text-brand-teal" />
+                          <span className="font-semibold text-sm uppercase tracking-widest">Plaćanje karticom</span>
+                        </div>
+                        <p className="text-xs text-brand-dark/70">
+                          Plaćanje platnom karticom na sajtu. (Nakon potvrde bićete preusmjereni na sigurno plaćanje)
+                        </p>
+                      </div>
+                    </label>
                   </div>
                 </form>
               ) : (
@@ -236,7 +283,8 @@ export function CartDrawer() {
                       Nazad
                     </button>
                     <button 
-                      onClick={handleSubmit}
+                      type="submit"
+                      form="checkout-form"
                       className="flex-1 bg-brand-dark text-white py-3.5 rounded-full hover:bg-brand-pink transition-colors uppercase tracking-widest text-xs font-bold shadow-lg"
                     >
                       Potvrdi narudžbu
