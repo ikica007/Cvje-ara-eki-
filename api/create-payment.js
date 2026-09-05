@@ -1,11 +1,12 @@
-export default async function handler(request) {
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const body = await request.json();
-    const { amount, customer } = body;
+    // U Node.js / Vercel okruženju req.body je već parsiran JSON
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const { amount, customer } = body || {};
 
     // 1. Dobijanje OAuth tokena od FinRelay-a
     const tokenResponse = await fetch(process.env.FINRELAY_TOKEN_URL, {
@@ -23,16 +24,13 @@ export default async function handler(request) {
     if (!tokenResponse.ok) {
       const tokenError = await tokenResponse.text();
       console.error('FinRelay Token error:', tokenResponse.status, tokenError);
-      return new Response(JSON.stringify({ error: 'Autorizacija nije uspjela' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(401).json({ error: 'Autorizacija sa payment servisom nije uspjela.' });
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 2. Kreiranje platne sesije
+    // 2. Kreiranje platne transakcije
     const orderReference = `ORD-${Date.now()}`;
 
     const paymentResponse = await fetch(`${process.env.FINRELAY_API_URL}/payments`, {
@@ -59,23 +57,14 @@ export default async function handler(request) {
     if (!paymentResponse.ok) {
       const paymentError = await paymentResponse.text();
       console.error('FinRelay Payment error:', paymentResponse.status, paymentError);
-      return new Response(JSON.stringify({ error: paymentError }), {
-        status: paymentResponse.status,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(paymentResponse.status).json({ error: paymentError });
     }
 
     const paymentData = await paymentResponse.json();
-    return new Response(JSON.stringify(paymentData), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(200).json(paymentData);
 
   } catch (error) {
     console.error('Server error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(500).json({ error: error.message || 'Interna greška na serveru' });
   }
 }
