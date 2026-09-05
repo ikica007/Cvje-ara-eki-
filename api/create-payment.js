@@ -4,12 +4,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    // U Node.js / Vercel okruženju req.body je već parsiran JSON
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { amount, customer } = body || {};
 
-    // 1. Dobijanje OAuth tokena od FinRelay-a
-    const tokenResponse = await fetch(process.env.FINRELAY_TOKEN_URL, {
+    // 1. Dobijanje OAuth access tokena
+    const tokenUrl = process.env.FINRELAY_TOKEN_URL || 'https://api.finrelay.com/oauth/token';
+
+    const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -23,75 +24,62 @@ export default async function handler(req, res) {
 
     if (!tokenResponse.ok) {
       const tokenError = await tokenResponse.text();
-      console.error('FinRelay Token error:', tokenResponse.status, tokenError);
+      console.error('FinRelay Token Error:', tokenResponse.status, tokenError);
       return res.status(401).json({ error: 'Autorizacija sa payment servisom nije uspjela.' });
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 2. Kreiranje platne transakcije
+    // 2. Kreiranje HPP (Hosted Payment Page) sesije
+    const baseUrl = (process.env.FINRELAY_API_URL || 'https://api.finrelay.com').replace(/\/+$/, '');
+    const hppEndpoint = `${baseUrl}/api/hosted-payment-page`;
+
+    const siteUrl = process.env.SITE_URL || 'https://www.cvjecarascekic.me';
     const orderReference = `ORD-${Date.now()}`;
 
-    // Lista svih mogućih FinRelay API produkcionih ruta za kreiranje sesije
-    const endpointsToTry = [
-      'https://api.finrelay.io/v1/payments',
-      'https://api.finrelay.io/api/v1/payments',
-      'https://api.finrelay.io/payments',
-      'https://api.finrelay.io/v1/checkout/sessions',
-      'https://api.finrelay.io/api/v1/checkout/sessions',
-      'https://api.finrelay.io/checkout/sessions'
-    ];
-
-    let paymentResponse = null;
-    let paymentErrorText = '';
-
+    // Payload konstruisan po tačnoj specifikaciji iz HPP dokumentacije
     const payload = {
-      terminalId: process.env.FINRELAY_TERMINAL_ID,
-      amount: Math.round(amount * 100),
+      reference: orderReference.substring(0, 40),
+      terminal_id: process.env.FINRELAY_TERMINAL_ID,
+      description: `Narudžba ${orderReference}`,
       currency: 'EUR',
-      reference: orderReference,
-      returnUrl: `${process.env.SITE_URL || 'https://www.cvjecarascekic.me'}/order-status`,
-      customer: customer ? {
-        email: customer.email,
-        firstName: customer.firstName,
-        lastName: customer.lastName,
-        phone: customer.phone,
-      } : undefined,
+      amount: Math.round((parseFloat(amount) || 0) * 100), // Iznos u centima (npr. 10.00 EUR = 1000)
+      transaction_type: 'PURCHASE',
+      success_url: `${siteUrl}/order-status?status=success`,
+      cancel_url: `${siteUrl}/order-status?status=cancelled`,
+      error_url: `${siteUrl}/order-status?status=error`,
+      customer_first_name: customer?.firstName || '',
+      customer_last_name: customer?.lastName || '',
+      customer_email: customer?.email || '',
+      customer_phone_number: customer?.phone || '',
+      language: 'bs' // Postavlja interfejs forme na lokalni jezik
     };
 
-    // Automatski pokušaj svake rute dok jedna ne vrati uspeh
-    for (const endpoint of endpointsToTry) {
-      console.log(`Pokušavam FinRelay endpoint: ${endpoint}`);
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+    console.log('Slanje zahtjeva na FinRelay HPP:', hppEndpoint);
 
-      if (response.status !== 404) {
-        paymentResponse = response;
-        break;
-      }
-      
-      paymentErrorText = await response.text();
+    const paymentResponse = await fetch(hppEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const responseData = await paymentResponse.json();
+
+    if (!paymentResponse.ok) {
+      console.error('FinRelay HPP Error:', paymentResponse.status, responseData);
+      return res.status(paymentResponse.status).json(responseData);
     }
 
-    if (!paymentResponse || !paymentResponse.ok) {
-      const errorMsg = paymentResponse ? await paymentResponse.text() : paymentErrorText;
-      console.error('FinRelay Payment error:', paymentResponse?.status || 404, errorMsg);
-      return res.status(paymentResponse?.status || 404).json({ error: errorMsg });
-    }
-
-    const paymentData = await paymentResponse.json();
-    return res.status(200).json(paymentData);
+    // 3. Vraćamo odgovor sa redirect_url na frontend
+    return res.status(200).json(responseData);
 
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('Server Error:', error);
     return res.status(500).json({ error: error.message || 'Interna greška na serveru' });
   }
 }
