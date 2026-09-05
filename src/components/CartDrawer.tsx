@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, ShoppingBag, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { useCart } from './CartContext';
+import { useCart } from '../CartContext';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -51,7 +50,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
 
         const data = await response.json();
 
-        // Preusmjeravanje kupca na FinRelay HPP stranicu za unos kartice
         if (data.redirectUrl || data.url || data.paymentUrl) {
           window.location.href = data.redirectUrl || data.url || data.paymentUrl;
         } else {
@@ -110,17 +108,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
           
           {/* Header */}
           <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-stone-50/50">
-            <div className="flex items-center space-x-2">
-              <ShoppingBag className="w-5 h-5 text-emerald-800" />
-              <h2 className="text-lg font-serif font-medium text-stone-800">
-                {orderSuccess ? 'Uspješno' : step === 'cart' ? 'Vaša korpa' : 'Podaci za dostavu'}
-              </h2>
-            </div>
+            <h2 className="text-lg font-serif font-medium text-stone-800">
+              {orderSuccess ? 'Uspješno' : step === 'cart' ? 'Vaša korpa' : 'Podaci za dostavu'}
+            </h2>
             <button 
               onClick={onClose}
               className="p-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-100 transition-colors"
             >
-              <X className="w-5 h-5" />
+              ✕
             </button>
           </div>
 
@@ -128,8 +123,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
           <div className="flex-1 overflow-y-auto p-6">
             {orderSuccess ? (
               <div className="text-center py-12 space-y-4">
-                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-800">
-                  <CheckCircle2 className="w-8 h-8" />
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                  ✓
                 </div>
                 <h3 className="text-xl font-serif text-stone-800">Hvala na narudžbi!</h3>
                 <p className="text-stone-600 text-sm max-w-xs mx-auto">
@@ -144,9 +139,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
               </div>
             ) : cart.length === 0 ? (
               <div className="text-center py-16 space-y-4">
-                <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto text-stone-400">
-                  <ShoppingBag className="w-8 h-8" />
-                </div>
                 <p className="text-stone-500 font-serif">Vaša korpa je prazna</p>
               </div>
             ) : step === 'cart' ? (
@@ -181,9 +173,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                         </div>
                         <button 
                           onClick={() => removeFromCart(item.id)}
-                          className="text-stone-400 hover:text-red-500 transition-colors p-1"
+                          className="text-stone-400 hover:text-red-500 transition-colors text-xs p-1"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          Ukloni
                         </button>
                       </div>
                     </div>
@@ -297,8 +289,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                   onClick={() => setStep('checkout')}
                   className="w-full py-3 bg-emerald-800 hover:bg-emerald-900 text-white rounded-full font-medium text-sm flex items-center justify-center space-x-2 transition-colors"
                 >
-                  <span>Nastavi na kasu</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Nastavi na kasu →</span>
                 </button>
               ) : (
                 <div className="flex space-x-3">
