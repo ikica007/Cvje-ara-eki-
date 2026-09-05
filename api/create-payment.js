@@ -33,14 +33,14 @@ export default async function handler(req, res) {
     // 2. Kreiranje platne transakcije
     const orderReference = `ORD-${Date.now()}`;
 
-    // Čišćenje i definisanje tačne bazne adrese
-    const rawBaseUrl = (process.env.FINRELAY_API_URL || 'https://api.finrelay.io').trim().replace(/\/+$/, '');
-    
-    // Lista mogućih FinRelay produkcionih ruta za kreiranje plaćanja
+    // Lista svih mogućih FinRelay API produkcionih ruta za kreiranje sesije
     const endpointsToTry = [
-      `${rawBaseUrl}/v1/payments`,
-      `${rawBaseUrl}/api/v1/payments`,
-      `${rawBaseUrl}/payments`
+      'https://api.finrelay.io/v1/payments',
+      'https://api.finrelay.io/api/v1/payments',
+      'https://api.finrelay.io/payments',
+      'https://api.finrelay.io/v1/checkout/sessions',
+      'https://api.finrelay.io/api/v1/checkout/sessions',
+      'https://api.finrelay.io/checkout/sessions'
     ];
 
     let paymentResponse = null;
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
       } : undefined,
     };
 
-    // Automatski pokušaj rute dok jedna ne vrati uspeh
+    // Automatski pokušaj svake rute dok jedna ne vrati uspeh
     for (const endpoint of endpointsToTry) {
       console.log(`Pokušavam FinRelay endpoint: ${endpoint}`);
       
