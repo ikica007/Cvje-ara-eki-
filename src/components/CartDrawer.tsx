@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-import { useCart } from './CartContext';
+import { useCart } from '../context/CartContext';
 
-interface CartDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
-  const { cart, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+export const CartDrawer: React.FC = () => {
+  const { cart, removeFromCart, updateQuantity, totalPrice, clearCart, isCartOpen, setIsCartOpen } = useCart();
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
   const [paymentMethod, setPaymentMethod] = useState<'pouzecem' | 'karticom'>('pouzecem');
   const [orderSuccess, setOrderSuccess] = useState(false);
@@ -22,7 +17,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
     note: ''
   });
 
-  if (!isOpen) return null;
+  if (!isCartOpen) return null;
+
+  const handleClose = () => {
+    setIsCartOpen(false);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -96,12 +95,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
   const handleReset = () => {
     setOrderSuccess(false);
     setStep('cart');
-    onClose();
+    handleClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={handleClose} />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
@@ -112,7 +111,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
               {orderSuccess ? 'Uspješno' : step === 'cart' ? 'Vaša korpa' : 'Podaci za dostavu'}
             </h2>
             <button 
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-100 transition-colors"
             >
               ✕
