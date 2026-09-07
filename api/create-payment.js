@@ -50,6 +50,9 @@ export default async function handler(req, res) {
   }
 
   const reference = `CS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const successLink = `${env.siteUrl}/?payment=success&ref=${reference}`;
+  const errorLink = `${env.siteUrl}/?payment=error&ref=${reference}`;
+  const cancelLink = `${env.siteUrl}/?payment=cancel&ref=${reference}`;
 
   try {
     console.log('Tražim token od:', env.tokenUrl);
@@ -99,10 +102,13 @@ export default async function handler(req, res) {
       amount: centi,
       transaction_type: 'PURCHASE',
       description: opis,
-      return_url: `${env.siteUrl}/?payment=success&ref=${reference}`,
-      success_url: `${env.siteUrl}/?payment=success&ref=${reference}`,
-      error_url: `${env.siteUrl}/?payment=error&ref=${reference}`,
-      cancel_url: `${env.siteUrl}/?payment=cancel&ref=${reference}`,
+      return_url: successLink,
+      successUrl: successLink,
+      success_url: successLink,
+      errorUrl: errorLink,
+      error_url: errorLink,
+      cancelUrl: cancelLink,
+      cancel_url: cancelLink,
       customer_first_name: cist(ime, 100),
       customer_last_name: cist(prezime, 100),
       customer_email: cist(customer.email, 200),
