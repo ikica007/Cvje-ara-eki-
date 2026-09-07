@@ -1,17 +1,21 @@
 const USER_AGENT = 'CvjecaraScekic/1.0 (+https://cvjecarascekic.vercel.app)';
 
+function ocisti(val) {
+  return (val || '').replace(/\s+/g, '').replace(/\/+$/, '');
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ greska: 'Dozvoljen je samo POST.' });
   }
 
   const env = {
-    tokenUrl: process.env.FINRELAY_TOKEN_URL,
-    apiUrl: process.env.FINRELAY_API_URL,
-    clientId: process.env.FINRELAY_CLIENT_ID,
-    clientSecret: process.env.FINRELAY_CLIENT_SECRET,
-    terminalId: process.env.FINRELAY_TERMINAL_ID,
-    siteUrl: process.env.SITE_URL,
+    tokenUrl: ocisti(process.env.FINRELAY_TOKEN_URL),
+    apiUrl: ocisti(process.env.FINRELAY_API_URL),
+    clientId: ocisti(process.env.FINRELAY_CLIENT_ID),
+    clientSecret: ocisti(process.env.FINRELAY_CLIENT_SECRET),
+    terminalId: ocisti(process.env.FINRELAY_TERMINAL_ID),
+    siteUrl: ocisti(process.env.SITE_URL),
   };
 
   const nedostaje = Object.entries(env)
@@ -25,7 +29,6 @@ export default async function handler(req, res) {
 
   const { amount, customer, items } = req.body ?? {};
 
-  // amount dolazi u eurima (75.00), Finrelay treba cente (7500)
   const centi = Math.round((amount || 0) * 100);
 
   if (!centi || centi < 100 || centi > 500000) {
@@ -37,12 +40,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Ime je obavezno.' });
   }
 
-  // Razdvoji ime i prezime
   const dijelovi = customer.name.trim().split(/\s+/);
   const ime = dijelovi[0] || '';
   const prezime = dijelovi.slice(1).join(' ') || '';
 
-  // Opis za Finrelay (max 100 znakova)
   let opis = 'Narudžba sa sajta';
   if (items && items.length > 0) {
     opis = items.map(i => `${i.quantity}x ${i.name}`).join(', ').slice(0, 100);
@@ -51,8 +52,7 @@ export default async function handler(req, res) {
   const reference = `CS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   try {
-    // 1. Token
-    console.log('Tražim token...');
+    console.log('Tražim token od:', env.tokenUrl);
     const tokenRes = await fetch(env.tokenUrl, {
       method: 'POST',
       headers: {
@@ -91,7 +91,6 @@ export default async function handler(req, res) {
 
     console.log('Token dobijen, pravim HPP sesiju...');
 
-    // 2. HPP
     const hppUrl = `${env.apiUrl}/api/hosted-payment-page`;
     const hppBody = {
       reference,
@@ -149,7 +148,6 @@ export default async function handler(req, res) {
 
     console.log('Sesija kreirana:', { reference, session_id: hppData.session_id, amount: centi });
 
-    // Frontend očekuje redirectUrl
     return res.status(200).json({
       redirectUrl: hppData.redirect_url,
       reference,
