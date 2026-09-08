@@ -20,15 +20,11 @@ import { SlatkiAranzmani } from './components/categories/SlatkiAranzmani';
 import { KinderAranzmani } from './components/categories/KinderAranzmani';
 import { FullGallery } from './components/FullGallery';
 
-// Legal pages
-import { TermsOfService } from './components/legal/TermsOfService';
-import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
-
 // Cart Context i Drawer
 import { CartProvider } from './context/CartContext';
 import { CartDrawer } from './components/CartDrawer';
 
-export type Category = 'home' | 'gallery' | 'svadbene' | 'xl-buketi' | 'buketi' | 'korpe' | 'box' | '101-ruza' | 'rodjendani' | 'events' | 'slatki' | 'kinder' | 'terms' | 'privacy';
+export type Category = 'home' | 'gallery' | 'svadbene' | 'xl-buketi' | 'buketi' | 'korpe' | 'box' | '101-ruza' | 'rodjendani' | 'events' | 'slatki' | 'kinder';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<Category>('home');
@@ -50,8 +46,6 @@ export default function App() {
       case 'events': return <Events onBack={() => setActiveCategory('home')} />;
       case 'slatki': return <SlatkiAranzmani onBack={() => setActiveCategory('home')} />;
       case 'kinder': return <KinderAranzmani onBack={() => setActiveCategory('home')} />;
-      case 'terms': return <TermsOfService onBack={() => setActiveCategory('home')} />;
-      case 'privacy': return <PrivacyPolicy onBack={() => setActiveCategory('home')} />;
       default:
         return (
           <>
@@ -72,7 +66,7 @@ export default function App() {
         <main>
           {renderContent()}
         </main>
-        <Footer onSelectCategory={(cat) => setActiveCategory(cat as Category)} />
+        <Footer />
         <CartDrawer />
       </div>
     </CartProvider>
