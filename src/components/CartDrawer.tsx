@@ -1,80 +1,35 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { X, Trash2, Plus, Minus, ShoppingBag, Truck, CreditCard } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
-export const CartDrawer: React.FC = () => {
-  const { cart, removeFromCart, updateQuantity, totalPrice, clearCart, isCartOpen, setIsCartOpen } = useCart();
-  const [step, setStep] = useState<'cart' | 'checkout'>('cart');
-  const [paymentMethod, setPaymentMethod] = useState<'pouzecem' | 'karticom'>('pouzecem');
+export function CartDrawer() {
+  const { isCartOpen, setIsCartOpen, cart, updateQuantity, removeFromCart, totalPrice, clearCart } = useCart();
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
+  const [paymentMethod, setPaymentMethod] = useState<'pouzecem' | 'karticom'>('pouzecem');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: '',
     address: '',
-    city: '',
     phone: '',
-    deliveryDate: '',
-    note: ''
+    city: 'Podgorica', // Default grad
+    deliveryDate: ''
   });
 
-  if (!isCartOpen) return null;
-
-  const handleClose = () => {
-    setIsCartOpen(false);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 1. AKO JE IZABRANO PLAĆANJE KARTICOM (FINRELAY)
-    if (paymentMethod === 'karticom') {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/create-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            amount: totalPrice,
-            customer: formData,
-            items: cart,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.redirectUrl || data.url || data.paymentUrl) {
-          window.location.href = data.redirectUrl || data.url || data.paymentUrl;
-        } else {
-          alert('Greška pri kreiranju sesije za plaćanje: ' + (data.error || 'Pokušajte ponovo.'));
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Greška pri konekciji sa payment serverom:', error);
-        alert('Problem sa konekcijom. Pokušajte ponovo.');
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    // 2. AKO JE IZABRANO PLAĆANJE POUZEĆEM (WHATSAPP)
+    // Format the order message
     let message = `Nova narudžba!\n\n`;
     message += `*Podaci za dostavu:*\n`;
     message += `Ime i prezime: ${formData.name}\n`;
     message += `Adresa: ${formData.address}\n`;
     message += `Grad: ${formData.city}\n`;
-    message += `Telefon: ${formData.phone}\n`;
+    message += `Telefon: +382 ${formData.phone}\n`;
     if (formData.deliveryDate) {
       message += `Datum isporuke: ${formData.deliveryDate}\n`;
-    }
-    if (formData.note) {
-      message += `Napomena: ${formData.note}\n`;
     }
     message += `\n`;
     
@@ -83,237 +38,303 @@ export const CartDrawer: React.FC = () => {
       message += `${item.quantity}x ${item.name} - ${(item.price * item.quantity).toFixed(2)} €\n`;
     });
     
-    message += `\n*Ukupno za naplatu:* ${totalPrice.toFixed(2)} € (Plaćanje pouzećem)\n`;
+    const paymentText = paymentMethod === 'karticom' ? 'Plaćanje karticom' : 'Plaćanje pouzećem';
+    message += `\n*Ukupno za naplatu:* ${totalPrice.toFixed(2)} € (${paymentText})\n`;
     
+    // Encode the message for the URL
     const encodedMessage = encodeURIComponent(message);
+    
+    // Open WhatsApp with the pre-filled message
     window.open(`https://wa.me/38269108055?text=${encodedMessage}`, '_blank');
     
+    // Show success state and clear cart
     setOrderSuccess(true);
     clearCart();
   };
 
-  const handleReset = () => {
-    setOrderSuccess(false);
-    setStep('cart');
-    handleClose();
+  const closeDrawer = () => {
+    setIsCartOpen(false);
+    setTimeout(() => {
+      setIsCheckingOut(false);
+      setOrderSuccess(false);
+    }, 300);
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={handleClose} />
+    <AnimatePresence>
+      {isCartOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeDrawer}
+            className="fixed inset-0 bg-brand-dark/40 backdrop-blur-sm z-[60]"
+          />
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-[#F4EFE6] shadow-2xl z-[70] flex flex-col"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-brand-beige/60 bg-white">
+              <h2 className="serif text-2xl text-brand-dark font-medium">Tvoja Korpa</h2>
+              <button 
+                onClick={closeDrawer}
+                className="text-brand-dark/50 hover:text-brand-pink transition-colors p-2 hover:bg-brand-pink/10 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
-          
-          {/* Header */}
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-stone-50/50">
-            <h2 className="text-lg font-serif font-medium text-stone-800">
-              {orderSuccess ? 'Uspješno' : step === 'cart' ? 'Vaša korpa' : 'Podaci za dostavu'}
-            </h2>
-            <button 
-              onClick={handleClose}
-              className="p-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-100 transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {orderSuccess ? (
-              <div className="text-center py-12 space-y-4">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
-                  ✓
+            <div className="flex-1 overflow-y-auto p-6 scrollbar-none">
+              {orderSuccess ? (
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <div className="w-16 h-16 bg-brand-teal/20 text-brand-teal rounded-full flex items-center justify-center mb-6">
+                    <ShoppingBag className="w-8 h-8" />
+                  </div>
+                  <h3 className="serif text-2xl text-brand-dark mb-3">Hvala na povjerenju!</h3>
+                  <p className="text-brand-dark/70 text-sm max-w-[250px] mb-8 font-serif font-light">
+                    Tvoja narudžba je preusmjerena na WhatsApp gdje ćemo dogovoriti sve detalje oko dostave.
+                  </p>
+                  <button 
+                    onClick={closeDrawer}
+                    className="mt-8 bg-brand-dark text-white px-8 py-3 rounded-full hover:bg-brand-pink transition-colors uppercase tracking-widest text-xs font-bold"
+                  >
+                    Zatvori
+                  </button>
                 </div>
-                <h3 className="text-xl font-serif text-stone-800">Hvala na narudžbi!</h3>
-                <p className="text-stone-600 text-sm max-w-xs mx-auto">
-                  Vaša narudžba je poslata. Uskoro ćemo vas kontaktirati radi potvrde.
-                </p>
-                <button
-                  onClick={handleReset}
-                  className="mt-6 px-6 py-2.5 bg-emerald-800 text-white rounded-full text-sm hover:bg-emerald-900 transition-colors"
-                >
-                  Zatvori
-                </button>
-              </div>
-            ) : cart.length === 0 ? (
-              <div className="text-center py-16 space-y-4">
-                <p className="text-stone-500 font-serif">Vaša korpa je prazna</p>
-              </div>
-            ) : step === 'cart' ? (
-              <div className="space-y-6">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex space-x-4 py-4 border-b border-stone-100 last:border-0">
-                    <img 
-                      src={item.image} 
-                      alt={item.name} 
-                      className="w-20 h-20 object-cover rounded-lg bg-stone-100"
+              ) : cart.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center text-brand-dark/50">
+                  <ShoppingBag className="w-12 h-12 mb-4 opacity-20" />
+                  <p className="uppercase tracking-[0.2em] text-sm font-bold">Korpa je prazna</p>
+                </div>
+              ) : isCheckingOut ? (
+                <form id="checkout-form" onSubmit={handleSubmit} className="space-y-4">
+                  <h3 className="uppercase tracking-widest text-xs font-bold text-brand-dark/70 mb-6">Podaci za dostavu</h3>
+                  
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Ime i prezime</label>
+                    <input 
+                      required
+                      type="text" 
+                      value={formData.name}
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white"
                     />
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <h4 className="font-serif text-stone-800 text-sm">{item.name}</h4>
-                        <p className="text-emerald-800 text-sm font-medium mt-1">{item.price.toFixed(2)} €</p>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center border border-stone-200 rounded-lg">
-                          <button 
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="px-2.5 py-1 text-stone-500 hover:text-stone-800 text-xs"
-                          >
-                            -
-                          </button>
-                          <span className="px-2 text-xs font-medium text-stone-700">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="px-2.5 py-1 text-stone-500 hover:text-stone-800 text-xs"
-                          >
-                            +
-                          </button>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Adresa isporuke</label>
+                    <input 
+                      required
+                      type="text" 
+                      value={formData.address}
+                      onChange={e => setFormData({...formData, address: e.target.value})}
+                      className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Grad</label>
+                      <select 
+                        required
+                        value={formData.city}
+                        onChange={e => setFormData({...formData, city: e.target.value})}
+                        className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white"
+                      >
+                        {['Podgorica', 'Nikšić', 'Bar', 'Budva', 'Herceg Novi', 'Kotor', 'Tivat', 'Cetinje', 'Bijelo Polje', 'Berane', 'Pljevlja', 'Rožaje', 'Ulcinj', 'Danilovgrad', 'Mojkovac', 'Kolašin', 'Žabljak', 'Plav', 'Andrijevica', 'Šavnik', 'Plužine', 'Gusinje', 'Petnjica', 'Tuzi', 'Zeta'].map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Telefon</label>
+                      <div className="relative flex items-center">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-brand-dark/60 font-semibold text-sm">+382</span>
                         </div>
-                        <button 
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-stone-400 hover:text-red-500 transition-colors text-xs p-1"
-                        >
-                          Ukloni
-                        </button>
+                        <input 
+                          required
+                          type="tel" 
+                          placeholder="6X XXX XXX"
+                          value={formData.phone}
+                          onChange={e => {
+                            // Dozvoli samo unos brojeva
+                            const val = e.target.value.replace(/\D/g, '');
+                            setFormData({...formData, phone: val});
+                          }}
+                          className="w-full border border-brand-beige rounded-lg pl-14 pr-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white font-medium"
+                        />
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <form id="checkout-form" onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-stone-600 mb-1">Ime i prezime *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-emerald-800"
-                    placeholder="Petar Petrović"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-stone-600 mb-1">Adresa *</label>
-                  <input
-                    type="text"
-                    name="address"
-                    required
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-emerald-800"
-                    placeholder="Ulica i broj"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+
                   <div>
-                    <label className="block text-xs font-medium text-stone-600 mb-1">Grad *</label>
-                    <input
-                      type="text"
-                      name="city"
-                      required
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-emerald-800"
-                      placeholder="Podgorica"
+                    <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Datum isporuke (Opciono)</label>
+                    <input 
+                      type="date" 
+                      value={formData.deliveryDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={e => setFormData({...formData, deliveryDate: e.target.value})}
+                      className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-stone-600 mb-1">Telefon *</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      required
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-emerald-800"
-                      placeholder="069 000 000"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-stone-600 mb-1">Željeni datum dostave</label>
-                  <input
-                    type="date"
-                    name="deliveryDate"
-                    value={formData.deliveryDate}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-emerald-800"
-                  />
-                </div>
 
-                <div className="pt-2">
-                  <label className="block text-xs font-medium text-stone-600 mb-2">Način plaćanja</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('pouzecem')}
-                      className={`p-3 text-xs border rounded-lg font-medium text-center transition-all ${
-                        paymentMethod === 'pouzecem'
-                          ? 'border-emerald-800 bg-emerald-50 text-emerald-900'
-                          : 'border-stone-200 text-stone-600 hover:border-stone-300'
+                  <div className="mt-6 space-y-3">
+                    <label className="block text-xs uppercase tracking-widest text-brand-dark mb-2">Način plaćanja</label>
+                    
+                    {/* Opcija 1: Pouzećem */}
+                    <label 
+                      className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                        paymentMethod === 'pouzecem' 
+                          ? 'border-brand-pink bg-[#F4EFE6]' 
+                          : 'border-brand-beige/60 bg-white hover:border-brand-pink/50'
                       }`}
                     >
-                      Plaćanje pouzećem
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('karticom')}
-                      className={`p-3 text-xs border rounded-lg font-medium text-center transition-all ${
-                        paymentMethod === 'karticom'
-                          ? 'border-emerald-800 bg-emerald-50 text-emerald-900'
-                          : 'border-stone-200 text-stone-600 hover:border-stone-300'
+                      <input 
+                        type="radio" 
+                        name="paymentMethod" 
+                        value="pouzecem"
+                        checked={paymentMethod === 'pouzecem'}
+                        onChange={() => setPaymentMethod('pouzecem')}
+                        className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2 text-brand-dark mb-1">
+                          <Truck className="w-4 h-4 text-brand-teal" />
+                          <span className="font-semibold text-sm uppercase tracking-widest">Plaćanje pouzećem</span>
+                        </div>
+                        <p className="text-xs text-brand-dark/70">
+                          Iznos od {totalPrice.toFixed(2)} € plaćate gotovinom kuriru prilikom preuzimanja pošiljke. <strong>Cijena dostave je uračunata.</strong>
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Opcija 2: Karticom */}
+                    <label 
+                      className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                        paymentMethod === 'karticom' 
+                          ? 'border-brand-pink bg-[#F4EFE6]' 
+                          : 'border-brand-beige/60 bg-white hover:border-brand-pink/50'
                       }`}
                     >
-                      Plaćanje karticom
-                    </button>
+                      <input 
+                        type="radio" 
+                        name="paymentMethod" 
+                        value="karticom"
+                        checked={paymentMethod === 'karticom'}
+                        onChange={() => setPaymentMethod('karticom')}
+                        className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink"
+                      />
+                      <div>
+                        <div className="flex items-center gap-2 text-brand-dark mb-1">
+                          <CreditCard className="w-4 h-4 text-brand-teal" />
+                          <span className="font-semibold text-sm uppercase tracking-widest">Plaćanje karticom</span>
+                        </div>
+                        <p className="text-xs text-brand-dark/70">
+                          Plaćanje platnom karticom na sajtu. (Nakon potvrde bićete preusmjereni na sigurno plaćanje)
+                        </p>
+                      </div>
+                    </label>
                   </div>
-                </div>
-              </form>
-            )}
-          </div>
 
-          {/* Footer */}
-          {cart.length > 0 && !orderSuccess && (
-            <div className="p-6 border-t border-stone-100 bg-stone-50/50 space-y-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-stone-600">Ukupno:</span>
-                <span className="text-lg font-serif font-bold text-stone-800">{totalPrice.toFixed(2)} €</span>
-              </div>
+                  {/* ZAKONSKA OBAVEZA: Saglasnost */}
+                  <div className="mt-4 pt-4 border-t border-brand-beige/50">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        required
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink rounded border-brand-beige cursor-pointer shrink-0"
+                      />
+                      <span className="text-[11px] text-brand-dark/70 leading-relaxed">
+                        Pročitao/la sam i prihvatam <a href="#kontakt" onClick={closeDrawer} className="text-brand-pink font-semibold hover:underline">Uslove korišćenja</a> i <a href="#kontakt" onClick={closeDrawer} className="text-brand-pink font-semibold hover:underline">Politiku privatnosti</a>.
+                      </span>
+                    </label>
+                  </div>
 
-              {step === 'cart' ? (
-                <button
-                  onClick={() => setStep('checkout')}
-                  className="w-full py-3 bg-emerald-800 hover:bg-emerald-900 text-white rounded-full font-medium text-sm flex items-center justify-center space-x-2 transition-colors"
-                >
-                  <span>Nastavi na kasu →</span>
-                </button>
+                </form>
               ) : (
-                <div className="flex space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setStep('cart')}
-                    className="w-1/3 py-3 border border-stone-200 hover:bg-stone-100 text-stone-700 rounded-full font-medium text-xs transition-colors"
-                  >
-                    Nazad
-                  </button>
-                  <button
-                    type="submit"
-                    form="checkout-form"
-                    disabled={isLoading}
-                    className="w-2/3 py-3 bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white rounded-full font-medium text-xs flex items-center justify-center space-x-1 transition-colors"
-                  >
-                    <span>{isLoading ? 'Obrada...' : 'Potvrdi narudžbu'}</span>
-                  </button>
+                <div className="space-y-6">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex gap-4 bg-white p-3 rounded-2xl border border-brand-beige/40">
+                      <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-[#F4EFE6]">
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 py-1">
+                        <h4 className="font-serif font-medium text-brand-dark leading-tight">{item.name}</h4>
+                        <p className="text-brand-pink font-semibold mt-1">{item.price.toFixed(2)} €</p>
+                        
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center gap-3 bg-[#F4EFE6] rounded-full px-2 py-1">
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="w-6 h-6 flex items-center justify-center text-brand-dark/70 hover:text-brand-dark"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="text-xs font-semibold w-4 text-center">{item.quantity}</span>
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="w-6 h-6 flex items-center justify-center text-brand-dark/70 hover:text-brand-dark"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                          <button 
+                            onClick={() => removeFromCart(item.id)}
+                            className="text-brand-dark/40 hover:text-red-500 transition-colors p-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-          )}
 
-        </div>
-      </div>
-    </div>
+            {!orderSuccess && cart.length > 0 && (
+              <div className="border-t border-brand-beige/60 p-6 bg-white">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-brand-dark/70 uppercase tracking-widest text-xs font-bold">Ukupno</span>
+                  <span className="serif text-2xl font-semibold text-brand-dark">{totalPrice.toFixed(2)} €</span>
+                </div>
+                
+                {isCheckingOut ? (
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setIsCheckingOut(false)}
+                      className="px-6 py-3.5 rounded-full border border-brand-beige text-brand-dark hover:bg-brand-beige/30 transition-colors uppercase tracking-widest text-xs font-bold w-1/3"
+                    >
+                      Nazad
+                    </button>
+                    <button 
+                      type="submit"
+                      form="checkout-form"
+                      className="flex-1 bg-brand-dark text-white py-3.5 rounded-full hover:bg-brand-pink transition-colors uppercase tracking-widest text-xs font-bold shadow-lg"
+                    >
+                      Potvrdi narudžbu
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => setIsCheckingOut(true)}
+                    className="w-full bg-brand-dark text-white py-4 rounded-full hover:bg-brand-pink transition-colors uppercase tracking-widest text-xs font-bold shadow-lg"
+                  >
+                    Nastavi na plaćanje
+                  </button>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
-};
+}
