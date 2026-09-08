@@ -27,8 +27,23 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  // Očitaj korpu iz localStorage pri prvom učitavanju
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const savedCart = localStorage.getItem('cvjecara_cart');
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error('Error parsing cart from localStorage:', error);
+      return [];
+    }
+  });
+
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Sačuvaj korpu u localStorage svaki put kada se promijeni
+  React.useEffect(() => {
+    localStorage.setItem('cvjecara_cart', JSON.stringify(cart));
+  }, [cart]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
