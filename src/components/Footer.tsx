@@ -1,14 +1,16 @@
 import { Instagram, Facebook, MapPin, Phone, Mail } from 'lucide-react';
 
-export function Footer() {
+interface Props {
+  onSelectCategory?: (category: string) => void;
+}
+
+export function Footer({ onSelectCategory }: Props) {
   return (
     <footer id="kontakt" className="bg-brand-dark text-brand-light pt-20 pb-10 border-t border-brand-beige/25 relative overflow-hidden">
       {/* Decorative leaf/botanical elements or subtle organic blurs */}
       <div className="absolute top-0 left-0 w-80 h-80 rounded-full bg-brand-teal/5 blur-3xl pointer-events-none" />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          
           <div className="lg:col-span-2">
             <span className="cursive text-4xl text-brand-pink block mb-2 font-normal tracking-wide">
               Agencija za dekoraciju & event styling
@@ -25,18 +27,18 @@ export function Footer() {
               <p className="text-sm font-light text-brand-light/90">Nedelja: 08–12h</p>
             </div>
             <div className="flex flex-wrap gap-4 mt-6">
-              <a 
-                href="https://www.instagram.com/cvjecarascekic" 
-                target="_blank" 
+              <a
+                href="https://www.instagram.com/cvjecarascekic"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-3 border border-brand-pink/40 text-brand-light rounded-full px-7 py-3 hover:bg-brand-pink hover:text-brand-light transition-all duration-300 font-semibold text-xs uppercase tracking-widest"
               >
                 <Instagram className="h-4 w-4 text-brand-pink group-hover:text-brand-light transition-colors" />
                 Instagram
               </a>
-              <a 
-                href="https://www.facebook.com/CvjecaraScekic" 
-                target="_blank" 
+              <a
+                href="https://www.facebook.com/CvjecaraScekic"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-3 border border-brand-pink/40 text-brand-light rounded-full px-7 py-3 hover:bg-[#1877F2] hover:border-[#1877F2] hover:text-brand-light transition-all duration-300 font-semibold text-xs uppercase tracking-widest"
               >
@@ -45,15 +47,14 @@ export function Footer() {
               </a>
             </div>
           </div>
-
           <div>
             <h4 className="uppercase tracking-[0.15em] text-[11px] font-bold text-brand-pink mb-6">Kontakt & Lokacije</h4>
             <ul className="space-y-4 font-serif font-light text-brand-light/90">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-brand-pink shrink-0 mt-0.5" />
                 <div className="text-sm space-y-2">
-                  <p><strong className="text-brand-pink font-semibold">BP Cvjećara 1:</strong><br/>ul. Petra Cetinjskog 52</p>
-                  <p><strong className="text-brand-pink font-semibold">BP Cvjećara 2:</strong><br/>Tržni centar Bravera</p>
+                  <p><strong className="text-brand-pink font-semibold">BP Cvjećara 1:</strong><br />ul. Petra Cetinjskog 52</p>
+                  <p><strong className="text-brand-pink font-semibold">BP Cvjećara 2:</strong><br />Tržni centar Bravera</p>
                 </div>
               </li>
               <li className="flex flex-col gap-3 pt-2">
@@ -79,7 +80,6 @@ export function Footer() {
               </li>
             </ul>
           </div>
-
           <div>
             <h4 className="uppercase tracking-[0.15em] text-[11px] font-bold text-brand-pink mb-6">Informacije</h4>
             <ul className="space-y-3 font-serif font-light text-brand-light/90">
@@ -88,10 +88,29 @@ export function Footer() {
               <li><a href="#galerija" className="hover:text-brand-pink transition-all text-sm">Galerija</a></li>
               <li><a href="#recenzije" className="hover:text-brand-pink transition-all text-sm">Recenzije</a></li>
             </ul>
+            
+            <h4 className="uppercase tracking-[0.15em] text-[11px] font-bold text-brand-pink mb-6 mt-8">Pravne informacije</h4>
+            <ul className="space-y-3 font-serif font-light text-brand-light/90">
+              <li>
+                <button 
+                  onClick={() => onSelectCategory?.('terms')} 
+                  className="hover:text-brand-pink transition-all text-sm text-left"
+                >
+                  Uslovi korišćenja
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => onSelectCategory?.('privacy')} 
+                  className="hover:text-brand-pink transition-all text-sm text-left"
+                >
+                  Politika privatnosti
+                </button>
+              </li>
+            </ul>
           </div>
-
         </div>
-        
+
         {/* Google Maps Embeds */}
         <div className="grid md:grid-cols-2 gap-8 mb-16 mt-8">
           <div className="bg-brand-light/5 p-2 rounded-3xl border border-brand-light/10">
@@ -99,10 +118,10 @@ export function Footer() {
               Cvjećara 1 - ul. Petra Cetinjskog 52 ↗
             </a>
             <div className="w-full h-64 rounded-2xl overflow-hidden relative">
-              <iframe 
-                src="https://maps.google.com/maps?q=43.0559417,19.770745&t=&z=15&ie=UTF8&iwloc=&output=embed" 
-                className="absolute top-0 left-0 w-full h-full border-0 grayscale-[20%] contrast-125" 
-                allowFullScreen 
+              <iframe
+                src="https://maps.google.com/maps?q=43.0559417,19.770745&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                className="absolute top-0 left-0 w-full h-full border-0 grayscale-[20%] contrast-125"
+                allowFullScreen
                 loading="lazy">
               </iframe>
             </div>
@@ -110,16 +129,16 @@ export function Footer() {
           <div className="bg-brand-light/5 p-2 rounded-3xl border border-brand-light/10">
             <h4 className="text-center font-serif text-brand-pink mb-3 text-sm tracking-wide">Cvjećara 2 - Tržni centar Bravera</h4>
             <div className="w-full h-64 rounded-2xl overflow-hidden relative">
-              <iframe 
-                src="https://maps.google.com/maps?q=Trzni%20centar%20Bravera,%20Bijelo%20Polje&t=&z=15&ie=UTF8&iwloc=&output=embed" 
-                className="absolute top-0 left-0 w-full h-full border-0 grayscale-[20%] contrast-125" 
-                allowFullScreen 
+              <iframe
+                src="https://maps.google.com/maps?q=Trzni%20centar%20Bravera,%20Bijelo%20Polje&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                className="absolute top-0 left-0 w-full h-full border-0 grayscale-[20%] contrast-125"
+                allowFullScreen
                 loading="lazy">
               </iframe>
             </div>
           </div>
         </div>
-        
+
         <div className="pt-8 border-t border-brand-light/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-serif font-light text-brand-light/40">
           <p>&copy; {new Date().getFullYear()} Cvjećara Šćekić. Sva prava zadržana.</p>
         </div>
