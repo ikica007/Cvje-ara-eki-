@@ -19,9 +19,14 @@ export function CartDrawer() {
   });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
     
-    // Format the order message
+    if (paymentMethod === 'karticom') {
+      e.preventDefault();
+      window.location.href = `/api/create-payment`;
+      return;
+    }
+
+    e.preventDefault();
     let message = `Nova narudžba!\n\n`;
     message += `*Podaci za dostavu:*\n`;
     message += `Ime i prezime: ${formData.name}\n`;
@@ -38,16 +43,11 @@ export function CartDrawer() {
       message += `${item.quantity}x ${item.name} - ${(item.price * item.quantity).toFixed(2)} €\n`;
     });
     
-    const paymentText = paymentMethod === 'karticom' ? 'Plaćanje karticom' : 'Plaćanje pouzećem';
-    message += `\n*Ukupno za naplatu:* ${totalPrice.toFixed(2)} € (${paymentText})\n`;
+    message += `\n*Ukupno za naplatu:* ${totalPrice.toFixed(2)} € (Plaćanje pouzećem)\n`;
     
-    // Encode the message for the URL
     const encodedMessage = encodeURIComponent(message);
-    
-    // Open WhatsApp with the pre-filled message
     window.open(`https://wa.me/38269108055?text=${encodedMessage}`, '_blank');
     
-    // Show success state and clear cart
     setOrderSuccess(true);
     clearCart();
   };
@@ -116,35 +116,18 @@ export function CartDrawer() {
                   
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Ime i prezime</label>
-                    <input 
-                      required
-                      type="text" 
-                      value={formData.name}
-                      onChange={e => setFormData({...formData, name: e.target.value})}
-                      className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white"
-                    />
+                    <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white" />
                   </div>
                   
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Adresa isporuke</label>
-                    <input 
-                      required
-                      type="text" 
-                      value={formData.address}
-                      onChange={e => setFormData({...formData, address: e.target.value})}
-                      className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white"
-                    />
+                    <input required type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Grad</label>
-                      <select 
-                        required
-                        value={formData.city}
-                        onChange={e => setFormData({...formData, city: e.target.value})}
-                        className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white"
-                      >
+                      <select required value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white">
                         {['Podgorica', 'Nikšić', 'Bar', 'Budva', 'Herceg Novi', 'Kotor', 'Tivat', 'Cetinje', 'Bijelo Polje', 'Berane', 'Pljevlja', 'Rožaje', 'Ulcinj', 'Danilovgrad', 'Mojkovac', 'Kolašin', 'Žabljak', 'Plav', 'Andrijevica', 'Šavnik', 'Plužine', 'Gusinje', 'Petnjica', 'Tuzi', 'Zeta'].map(city => (
                           <option key={city} value={city}>{city}</option>
                         ))}
@@ -156,107 +139,48 @@ export function CartDrawer() {
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <span className="text-brand-dark/60 font-semibold text-sm">+382</span>
                         </div>
-                        <input 
-                          required
-                          type="tel" 
-                          placeholder="6X XXX XXX"
-                          value={formData.phone}
-                          onChange={e => {
-                            // Dozvoli samo unos brojeva
-                            const val = e.target.value.replace(/\D/g, '');
-                            setFormData({...formData, phone: val});
-                          }}
-                          className="w-full border border-brand-beige rounded-lg pl-14 pr-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white font-medium"
-                        />
+                        <input required type="tel" placeholder="6X XXX XXX" value={formData.phone} onChange={e => { const val = e.target.value.replace(/\D/g, ''); setFormData({...formData, phone: val}); }} className="w-full border border-brand-beige rounded-lg pl-14 pr-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white font-medium" />
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-brand-dark mb-1">Datum isporuke (Opciono)</label>
-                    <input 
-                      type="date" 
-                      value={formData.deliveryDate}
-                      min={new Date().toISOString().split('T')[0]}
-                      onChange={e => setFormData({...formData, deliveryDate: e.target.value})}
-                      className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white"
-                    />
+                    <input type="date" value={formData.deliveryDate} min={new Date().toISOString().split('T')[0]} onChange={e => setFormData({...formData, deliveryDate: e.target.value})} className="w-full border border-brand-beige rounded-lg px-4 py-2.5 focus:outline-none focus:border-brand-pink bg-white" />
                   </div>
 
                   <div className="mt-6 space-y-3">
                     <label className="block text-xs uppercase tracking-widest text-brand-dark mb-2">Način plaćanja</label>
-                    
-                    {/* Opcija 1: Pouzećem */}
-                    <label 
-                      className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
-                        paymentMethod === 'pouzecem' 
-                          ? 'border-brand-pink bg-[#F4EFE6]' 
-                          : 'border-brand-beige/60 bg-white hover:border-brand-pink/50'
-                      }`}
-                    >
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        value="pouzecem"
-                        checked={paymentMethod === 'pouzecem'}
-                        onChange={() => setPaymentMethod('pouzecem')}
-                        className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink"
-                      />
+                    <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${ paymentMethod === 'pouzecem' ? 'border-brand-pink bg-[#F4EFE6]' : 'border-brand-beige/60 bg-white hover:border-brand-pink/50' }`}>
+                      <input type="radio" name="paymentMethod" value="pouzecem" checked={paymentMethod === 'pouzecem'} onChange={() => setPaymentMethod('pouzecem')} className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink" />
                       <div>
                         <div className="flex items-center gap-2 text-brand-dark mb-1">
                           <Truck className="w-4 h-4 text-brand-teal" />
                           <span className="font-semibold text-sm uppercase tracking-widest">Plaćanje pouzećem</span>
                         </div>
-                        <p className="text-xs text-brand-dark/70">
-                          Iznos od {totalPrice.toFixed(2)} € plaćate gotovinom kuriru prilikom preuzimanja pošiljke. <strong>Cijena dostave je uračunata.</strong>
-                        </p>
+                        <p className="text-xs text-brand-dark/70">Iznos od {totalPrice.toFixed(2)} € plaćate gotovinom kuriru prilikom preuzimanja pošiljke. <strong>Cijena dostave je uračunata.</strong></p>
                       </div>
                     </label>
-
-                    {/* Opcija 2: Karticom */}
-                    <label 
-                      className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
-                        paymentMethod === 'karticom' 
-                          ? 'border-brand-pink bg-[#F4EFE6]' 
-                          : 'border-brand-beige/60 bg-white hover:border-brand-pink/50'
-                      }`}
-                    >
-                      <input 
-                        type="radio" 
-                        name="paymentMethod" 
-                        value="karticom"
-                        checked={paymentMethod === 'karticom'}
-                        onChange={() => setPaymentMethod('karticom')}
-                        className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink"
-                      />
+                    <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${ paymentMethod === 'karticom' ? 'border-brand-pink bg-[#F4EFE6]' : 'border-brand-beige/60 bg-white hover:border-brand-pink/50' }`}>
+                      <input type="radio" name="paymentMethod" value="karticom" checked={paymentMethod === 'karticom'} onChange={() => setPaymentMethod('karticom')} className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink" />
                       <div>
                         <div className="flex items-center gap-2 text-brand-dark mb-1">
                           <CreditCard className="w-4 h-4 text-brand-teal" />
                           <span className="font-semibold text-sm uppercase tracking-widest">Plaćanje karticom</span>
                         </div>
-                        <p className="text-xs text-brand-dark/70">
-                          Plaćanje platnom karticom na sajtu. (Nakon potvrde bićete preusmjereni na sigurno plaćanje)
-                        </p>
+                        <p className="text-xs text-brand-dark/70">Plaćanje platnom karticom na sajtu. (Nakon potvrde bićete preusmjereni na sigurno plaćanje)</p>
                       </div>
                     </label>
                   </div>
 
-                  {/* ZAKONSKA OBAVEZA: Saglasnost */}
                   <div className="mt-4 pt-4 border-t border-brand-beige/50">
                     <label className="flex items-start gap-3 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        required
-                        checked={termsAccepted}
-                        onChange={(e) => setTermsAccepted(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink rounded border-brand-beige cursor-pointer shrink-0"
-                      />
+                      <input type="checkbox" required checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-0.5 w-4 h-4 text-brand-pink accent-brand-pink rounded border-brand-beige cursor-pointer shrink-0" />
                       <span className="text-[11px] text-brand-dark/70 leading-relaxed">
-                        Pročitao/la sam i prihvatam <a href="#kontakt" onClick={closeDrawer} className="text-brand-pink font-semibold hover:underline">Uslove korišćenja</a> i <a href="#kontakt" onClick={closeDrawer} className="text-brand-pink font-semibold hover:underline">Politiku privatnosti</a>.
+                        Slažem se da podaci budu iskorišćeni za obradu narudžbe u svrhu prodavca Scekic D&V group doo u skladu sa zakonima Crne Gore. Obaviješten/a sam da usled brze kvarljivosti robe (cvijeće) po zakonu nemam pravo vraćanja nakon 14 dana osim u trenutku isporuke na reklamaciju.
                       </span>
                     </label>
                   </div>
-
                 </form>
               ) : (
                 <div className="space-y-6">
@@ -268,29 +192,13 @@ export function CartDrawer() {
                       <div className="flex-1 py-1">
                         <h4 className="font-serif font-medium text-brand-dark leading-tight">{item.name}</h4>
                         <p className="text-brand-pink font-semibold mt-1">{item.price.toFixed(2)} €</p>
-                        
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-3 bg-[#F4EFE6] rounded-full px-2 py-1">
-                            <button 
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-6 h-6 flex items-center justify-center text-brand-dark/70 hover:text-brand-dark"
-                            >
-                              <Minus className="w-3 h-3" />
-                            </button>
+                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-6 h-6 flex items-center justify-center text-brand-dark/70 hover:text-brand-dark"><Minus className="w-3 h-3" /></button>
                             <span className="text-xs font-semibold w-4 text-center">{item.quantity}</span>
-                            <button 
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-6 h-6 flex items-center justify-center text-brand-dark/70 hover:text-brand-dark"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </button>
+                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-6 h-6 flex items-center justify-center text-brand-dark/70 hover:text-brand-dark"><Plus className="w-3 h-3" /></button>
                           </div>
-                          <button 
-                            onClick={() => removeFromCart(item.id)}
-                            className="text-brand-dark/40 hover:text-red-500 transition-colors p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <button onClick={() => removeFromCart(item.id)} className="text-brand-dark/40 hover:text-red-500 transition-colors p-1"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </div>
                     </div>
@@ -305,30 +213,13 @@ export function CartDrawer() {
                   <span className="text-brand-dark/70 uppercase tracking-widest text-xs font-bold">Ukupno</span>
                   <span className="serif text-2xl font-semibold text-brand-dark">{totalPrice.toFixed(2)} €</span>
                 </div>
-                
                 {isCheckingOut ? (
                   <div className="flex gap-3">
-                    <button 
-                      onClick={() => setIsCheckingOut(false)}
-                      className="px-6 py-3.5 rounded-full border border-brand-beige text-brand-dark hover:bg-brand-beige/30 transition-colors uppercase tracking-widest text-xs font-bold w-1/3"
-                    >
-                      Nazad
-                    </button>
-                    <button 
-                      type="submit"
-                      form="checkout-form"
-                      className="flex-1 bg-brand-dark text-white py-3.5 rounded-full hover:bg-brand-pink transition-colors uppercase tracking-widest text-xs font-bold shadow-lg"
-                    >
-                      Potvrdi narudžbu
-                    </button>
+                    <button onClick={() => setIsCheckingOut(false)} className="px-6 py-3.5 rounded-full border border-brand-beige text-brand-dark hover:bg-brand-beige/30 transition-colors uppercase tracking-widest text-xs font-bold w-1/3">Nazad</button>
+                    <button type="submit" form="checkout-form" className="flex-1 bg-brand-dark text-white py-3.5 rounded-full hover:bg-brand-pink transition-colors uppercase tracking-widest text-xs font-bold shadow-lg">Potvrdi narudžbu</button>
                   </div>
                 ) : (
-                  <button 
-                    onClick={() => setIsCheckingOut(true)}
-                    className="w-full bg-brand-dark text-white py-4 rounded-full hover:bg-brand-pink transition-colors uppercase tracking-widest text-xs font-bold shadow-lg"
-                  >
-                    Nastavi na plaćanje
-                  </button>
+                  <button onClick={() => setIsCheckingOut(true)} className="w-full bg-brand-dark text-white py-4 rounded-full hover:bg-brand-pink transition-colors uppercase tracking-widest text-xs font-bold shadow-lg">Nastavi na plaćanje</button>
                 )}
               </div>
             )}
