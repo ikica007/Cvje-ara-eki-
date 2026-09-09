@@ -21,10 +21,20 @@ const handleSubmit = async (e: React.FormEvent) => {
           }),
         });
 
-        const data = await response.json();
+        // Bezbjedno čitanje odgovora da bismo izbjegli "Unexpected end of JSON input" grešku
+        const text = await response.text();
+        let data: any = {};
+        try {
+          if (text) {
+            data = JSON.parse(text);
+          }
+        } catch (parseError) {
+          console.error("Server nije vratio validan JSON:", text);
+          throw new Error("Server je vratio prazan ili neispravan odgovor.");
+        }
 
         if (!response.ok) {
-          throw new Error(data.error || data.greska || 'Greška prilikom kreiranja plaćanja');
+          throw new Error(data.error || data.greska || 'Greška prilikom kreiranja plaćanja na serveru');
         }
         
         // Tvoj API vraća 'redirectUrl', pa ga koristimo za preusmjeravanje
