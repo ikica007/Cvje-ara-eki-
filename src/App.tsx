@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
@@ -20,11 +20,10 @@ import { SlatkiAranzmani } from './components/categories/SlatkiAranzmani';
 import { KinderAranzmani } from './components/categories/KinderAranzmani';
 import { FullGallery } from './components/FullGallery';
 
-// Cart Context i Drawer
 import { CartProvider } from './context/CartContext';
 import { CartDrawer } from './components/CartDrawer';
 
-export type Category = 'home' | 'gallery' | 'svadbene' | 'xl-buketi' | 'buketi' | 'korpe' | 'box' | '101-ruza' | 'rodjendani' | 'events' | 'slatki' | 'kinder';
+type Category = 'home' | 'gallery' | 'svadbene' | 'xl-buketi' | 'buketi' | 'korpe' | 'box' | '101-ruza' | 'rodjendani' | 'events' | 'slatki' | 'kinder';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<Category>('home');
