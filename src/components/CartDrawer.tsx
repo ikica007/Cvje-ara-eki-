@@ -21,7 +21,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           }),
         });
 
-        // Bezbjedno čitanje odgovora da bismo izbjegli "Unexpected end of JSON input" grešku
+        // Bezbjedno čitanje odgovora
         const text = await response.text();
         let data: any = {};
         try {
