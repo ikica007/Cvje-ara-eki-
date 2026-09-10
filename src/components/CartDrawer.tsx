@@ -1,4 +1,21 @@
-const handleSubmit = async (e: React.FormEvent) => {
+import React, { useState } from 'react';
+import { useCart } from '../context/CartContext';
+
+export function CartDrawer() {
+  const { cart, removeFromCart, updateQuantity, totalPrice, isCartOpen, setIsCartOpen, clearCart } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState<'pouzecem' | 'karticom'>('karticom');
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    city: 'Podgorica',
+    phone: '',
+    email: '',
+    postalCode: '',
+    deliveryDate: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (paymentMethod === 'karticom') {
@@ -69,3 +86,107 @@ const handleSubmit = async (e: React.FormEvent) => {
     setOrderSuccess(true);
     clearCart();
   };
+
+  if (!isCartOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-black/50" onClick={() => setIsCartOpen(false)} />
+      <div className="absolute inset-y-0 right-0 max-w-full flex">
+        <div className="w-screen max-w-md bg-white p-6 shadow-xl flex flex-col">
+          <div className="flex items-center justify-between pb-4 border-b">
+            <h2 className="text-lg font-bold">Tvoja Korpa</h2>
+            <button onClick={() => setIsCartOpen(false)} className="text-gray-500 hover:text-black">Zatvori</button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto py-4 space-y-4">
+            {cart.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">Korpa je prazna</p>
+            ) : (
+              cart.map((item) => (
+                <div key={item.id} className="flex justify-between items-center border-b pb-2">
+                  <div>
+                    <p className="font-semibold">{item.name}</p>
+                    <p className="text-sm text-gray-500">{item.price} € x {item.quantity}</p>
+                  </div>
+                  <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-sm">Ukloni</button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {cart.length > 0 && (
+            <form id="checkout-form" onSubmit={handleSubmit} className="border-t pt-4 space-y-3">
+              <input
+                type="text"
+                placeholder="Ime i prezime"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full p-2 border rounded text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Adresa"
+                required
+                value={formData.address}
+                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                className="w-full p-2 border rounded text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Grad"
+                required
+                value={formData.city}
+                onChange={(e) => setFormData({...formData, city: e.target.value})}
+                className="w-full p-2 border rounded text-sm"
+              />
+              <input
+                type="text"
+                placeholder="Telefon"
+                required
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                className="w-full p-2 border rounded text-sm"
+              />
+
+              <div className="flex gap-4 pt-2">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === 'karticom'}
+                    onChange={() => setPaymentMethod('karticom')}
+                  />
+                  Karticom
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={paymentMethod === 'pouzecem'}
+                    onChange={() => setPaymentMethod('pouzecem')}
+                  />
+                  Pouzećem
+                </label>
+              </div>
+
+              <div className="flex justify-between font-bold pt-2">
+                <span>Ukupno:</span>
+                <span>{totalPrice.toFixed(2)} €</span>
+              </div>
+
+              <button
+                type="submit"
+                form="checkout-form"
+                className="w-full bg-black text-white py-3 rounded font-bold hover:bg-gray-800 transition"
+              >
+                Potvrdi narudžbu
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
