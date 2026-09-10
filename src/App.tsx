@@ -24,19 +24,14 @@ import { CartDrawer } from './components/CartDrawer';
 
 type Category = 'home' | 'gallery' | 'svadbene' | 'xl-buketi' | 'buketi' | 'korpe' | 'box' | '101-ruza' | 'rodjendani' | 'events' | 'slatki' | 'kinder';
 
-function PaymentNotification({ onClose }: { onClose: () => void }) {
-  const params = new URLSearchParams(window.location.search);
-  const payment = params.get('payment');
-
-  if (!payment) return null;
-
-  const uspjesno = payment === 'success';
+function PaymentNotification({ status, onClose }: { status: string; onClose: () => void }) {
+  const uspjesno = status === 'success';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center space-y-4">
-        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl ${uspjesno ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto text-2xl font-bold ${uspjesno ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
           {uspjesno ? '✓' : '✕'}
         </div>
         <h2 className="text-xl font-serif text-stone-800">
@@ -60,6 +55,7 @@ function PaymentNotification({ onClose }: { onClose: () => void }) {
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<Category>('home');
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
   const [showPaymentNotif, setShowPaymentNotif] = useState(false);
 
   useEffect(() => {
@@ -68,16 +64,13 @@ export default function App() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('payment')) {
+    const payment = params.get('payment');
+    if (payment === 'success' || payment === 'error' || payment === 'cancel') {
+      setPaymentStatus(payment);
       setShowPaymentNotif(true);
-      // Ukloni payment parametar iz URL-a
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
-
-  const handleCloseNotif = () => {
-    setShowPaymentNotif(false);
-  };
 
   const renderContent = () => {
     switch (activeCategory) {
@@ -114,7 +107,12 @@ export default function App() {
         </main>
         <Footer />
         <CartDrawer />
-        {showPaymentNotif && <PaymentNotification onClose={handleCloseNotif} />}
+        {showPaymentNotif && (
+          <PaymentNotification
+            status={paymentStatus}
+            onClose={() => setShowPaymentNotif(false)}
+          />
+        )}
       </div>
     </CartProvider>
   );
