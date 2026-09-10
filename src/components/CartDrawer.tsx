@@ -14,7 +14,9 @@ const handleSubmit = async (e: React.FormEvent) => {
               name: formData.name,
               address: formData.address,
               city: formData.city,
-              phone: formData.phone
+              phone: formData.phone,
+              email: formData.email,
+              postalCode: formData.postalCode || '81000'
             },
             items: cart.map(item => ({ name: item.name, quantity: item.quantity }))
           }),
@@ -34,7 +36,6 @@ const handleSubmit = async (e: React.FormEvent) => {
           throw new Error(data.error || data.greska || 'Greška prilikom kreiranja plaćanja.');
         }
         
-        // Claude-ov kod izbacuje 'redirectUrl' kao tačnu varijablu
         if (data.redirectUrl) {
           window.location.href = data.redirectUrl;
         } else {
