@@ -89,9 +89,8 @@ export function Footer() {
             <ul className="space-y-3 font-serif font-light text-brand-light/90">
               <li><span className="text-sm">Scekic D&V group doo</span></li>
               <li><span className="text-sm">PIB: 03087131</span></li>
-              {/* OVDJE SMO DODALI LINKOVE */}
-              <li><a href="/uslovi-koriscenja" className="hover:text-brand-pink transition-all text-sm">Uslovi korišćenja</a></li>
-              <li><a href="/politika-privatnosti" className="hover:text-brand-pink transition-all text-sm">Politika privatnosti</a></li>
+              <li><a href="/uslovi-koriscenja.html" className="hover:text-brand-pink transition-all text-sm">Uslovi korišćenja</a></li>
+              <li><a href="/politika-privatnosti.html" className="hover:text-brand-pink transition-all text-sm">Politika privatnosti</a></li>
             </ul>
           </div>
         </div>
