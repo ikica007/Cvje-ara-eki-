@@ -82,6 +82,10 @@ export default async function handler(request) {
                 <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${reference}</td>
               </tr>
               <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Narudžba</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${t?.description || 'Nije navedeno'}</td>
+              </tr>
+              <tr>
                 <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Iznos</td>
                 <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${iznos} EUR</td>
               </tr>
