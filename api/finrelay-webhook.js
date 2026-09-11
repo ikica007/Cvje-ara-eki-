@@ -4,25 +4,40 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export default async function handler(request) {
-  if (request.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).send('Method not allowed');
   }
 
-  const sirovoTijelo = await request.text();
+  const sirovoTijelo = await getRawBody(req);
 
-  const authHeader = request.headers.get('authorization') ?? '';
+  const authHeader = req.headers['authorization'] ?? '';
   const [shema, token] = authHeader.split(' ');
 
   if (shema !== 'Bearer' || !token) {
     console.warn('Webhook bez Bearer tokena — odbijen.');
-    return new Response('Unauthorized', { status: 401 });
+    return res.status(401).send('Unauthorized');
   }
 
   const javniKljuc = process.env.FINRELAY_MERCHANT_PUBLIC_KEY;
   if (!javniKljuc) {
     console.error('FINRELAY_MERCHANT_PUBLIC_KEY nije postavljen.');
-    return new Response('Server misconfigured', { status: 500 });
+    return res.status(500).send('Server misconfigured');
   }
 
   try {
@@ -32,7 +47,7 @@ export default async function handler(request) {
     const ocekivani = payload?.data?.SHA512;
     if (!ocekivani) {
       console.warn('JWT bez SHA512 claima — odbijen.');
-      return new Response('Unauthorized', { status: 401 });
+      return res.status(401).send('Unauthorized');
     }
 
     const hex = createHash('sha512').update(sirovoTijelo, 'utf8').digest('hex');
@@ -43,19 +58,19 @@ export default async function handler(request) {
 
     if (!odgovara) {
       console.warn('Digest se ne poklapa — odbijen.');
-      return new Response('Unauthorized', { status: 401 });
+      return res.status(401).send('Unauthorized');
     }
 
   } catch (e) {
     console.warn('Verifikacija webhooka pala:', e.message);
-    return new Response('Unauthorized', { status: 401 });
+    return res.status(401).send('Unauthorized');
   }
 
   let dogadjaj;
   try {
     dogadjaj = JSON.parse(sirovoTijelo);
   } catch {
-    return new Response('Bad request', { status: 400 });
+    return res.status(400).send('Bad request');
   }
 
   const { event, payload: t } = dogadjaj;
@@ -122,5 +137,5 @@ export default async function handler(request) {
     console.log(`NIJE PLAĆENO: ${reference} — ${t?.status} (${t?.response_message})`);
   }
 
-  return new Response('OK', { status: 200 });
+  return res.status(200).send('OK');
 }
