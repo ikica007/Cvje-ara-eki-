@@ -61,6 +61,7 @@ export default async function handler(request) {
   const { event, payload: t } = dogadjaj;
   const reference = t?.reference;
   const iznos = t?.amount ? (t.amount / 100).toFixed(2) : '?';
+  const narudzba = t?.description || 'Nije navedeno';
 
   console.log('Webhook:', { event, reference, status: t?.status, amount: t?.amount });
 
@@ -69,45 +70,45 @@ export default async function handler(request) {
 
     try {
       await resend.emails.send({
-        from: 'Cvjećara Šćekić <onboarding@resend.dev>',
+        from: 'Cvjećara Šćekić <noreply@cvjecarascekic.me>',
         to: 'scekiccvjecara@hotmail.com',
         subject: `Nova narudžba karticom — ${iznos} EUR`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
-            <h2 style="color: #2d6a4f;">Nova narudžba karticom! 🌸</h2>
-            <p>Primljeno je kartično plaćanje.</p>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Referenca</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${reference}</td>
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2d6a4f; margin-bottom: 20px;">🌸 Nova narudžba karticom!</h2>
+            <p style="color: #444;">Primljeno je kartično plaćanje. Kontaktirajte kupca radi potvrde i dostave.</p>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+              <tr style="background: #f9f9f9;">
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee; color: #888; width: 40%;">Narudžba</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: bold; color: #2d6a4f;">${narudzba}</td>
               </tr>
               <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Narudžba</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${t?.description || 'Nije navedeno'}</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee; color: #888;">Iznos</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee; font-weight: bold;">${iznos} EUR</td>
+              </tr>
+              <tr style="background: #f9f9f9;">
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee; color: #888;">Ime kupca</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${t?.customer_first_name || ''} ${t?.customer_last_name || ''}</td>
               </tr>
               <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Iznos</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${iznos} EUR</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee; color: #888;">Telefon</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${t?.customer_phone_number || 'Nije naveden'}</td>
+              </tr>
+              <tr style="background: #f9f9f9;">
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee; color: #888;">Email kupca</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${t?.customer_email || 'Nije naveden'}</td>
               </tr>
               <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Ime kupca</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${t?.customer_first_name || ''} ${t?.customer_last_name || ''}</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee; color: #888;">Adresa dostave</td>
+                <td style="padding: 10px 12px; border-bottom: 1px solid #eee;">${t?.customer_address || ''}, ${t?.customer_city || ''}</td>
               </tr>
-              <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Email kupca</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${t?.customer_email || 'Nije naveden'}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Telefon</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${t?.customer_phone_number || 'Nije naveden'}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee; color: #666;">Adresa</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${t?.customer_address || ''}, ${t?.customer_city || ''}</td>
+              <tr style="background: #f9f9f9;">
+                <td style="padding: 10px 12px; color: #888;">Referenca</td>
+                <td style="padding: 10px 12px; font-size: 12px; color: #999;">${reference}</td>
               </tr>
             </table>
-            <p style="margin-top: 24px; color: #666; font-size: 14px;">
-              Kontaktirajte kupca radi potvrde i dostave.
+            <p style="margin-top: 24px; padding: 12px; background: #f0f7f4; border-radius: 8px; color: #2d6a4f; font-size: 14px;">
+              ✅ Plaćanje potvrđeno — možete pripremiti narudžbu.
             </p>
           </div>
         `,
