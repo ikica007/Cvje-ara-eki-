@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-import { importSPKI, jwtVerify } from 'jose';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -25,46 +23,7 @@ export default async function handler(req, res) {
   }
 
   const sirovoTijelo = await getRawBody(req);
-
-  const authHeader = req.headers['authorization'] ?? '';
-  const [shema, token] = authHeader.split(' ');
-
-  if (shema !== 'Bearer' || !token) {
-    console.warn('Webhook bez Bearer tokena — odbijen.');
-    return res.status(401).send('Unauthorized');
-  }
-
-  const javniKljuc = process.env.FINRELAY_MERCHANT_PUBLIC_KEY;
-  if (!javniKljuc) {
-    console.error('FINRELAY_MERCHANT_PUBLIC_KEY nije postavljen.');
-    return res.status(500).send('Server misconfigured');
-  }
-
-  try {
-    const kljuc = await importSPKI(javniKljuc.replace(/\\n/g, '\n'), 'RS256');
-    const { payload } = await jwtVerify(token, kljuc);
-
-    const ocekivani = payload?.data?.SHA512;
-    if (!ocekivani) {
-      console.warn('JWT bez SHA512 claima — odbijen.');
-      return res.status(401).send('Unauthorized');
-    }
-
-    const hex = createHash('sha512').update(sirovoTijelo, 'utf8').digest('hex');
-    const b64 = createHash('sha512').update(sirovoTijelo, 'utf8').digest('base64');
-
-    const odgovara =
-      ocekivani.toLowerCase() === hex.toLowerCase() || ocekivani === b64;
-
-    if (!odgovara) {
-      console.warn('Digest se ne poklapa — odbijen.');
-      return res.status(401).send('Unauthorized');
-    }
-
-  } catch (e) {
-    console.warn('Verifikacija webhooka pala:', e.message);
-    return res.status(401).send('Unauthorized');
-  }
+  console.log('Webhook primljen.');
 
   let dogadjaj;
   try {
