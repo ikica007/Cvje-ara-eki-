@@ -87,7 +87,7 @@ export function CartDrawer() {
     let message = `Nova narudžba!\n\n`;
     message += `*Podaci naručioca:*\n`;
     message += `Ime i prezime: ${formData.ordererName}\n`;
-    message += `Telefon: +382 ${formData.ordererPhone}\n`;
+    message += `Telefon: ${formData.ordererPhone}\n`;
     message += `Email: ${formData.ordererEmail}\n\n`;
     
     message += `*Podaci za dostavu:*\n`;
@@ -211,12 +211,17 @@ export function CartDrawer() {
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Telefon</label>
-                        <div className="relative flex items-center">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500 font-semibold text-sm">+382</span>
-                          </div>
-                          <input type="tel" required placeholder="6X XXX XXX" value={formData.ordererPhone} onChange={(e) => setFormData({...formData, ordererPhone: e.target.value.replace(/\D/g, '')})} className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                        </div>
+                        <input 
+                          required
+                          type="tel" 
+                          placeholder="+382 6X XXX XXX"
+                          value={formData.ordererPhone}
+                          onChange={e => {
+                            const val = e.target.value.replace(/[^\d\s+-]/g, '');
+                            setFormData({...formData, ordererPhone: val});
+                          }}
+                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all"
+                        />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Email</label>
@@ -238,7 +243,6 @@ export function CartDrawer() {
                         <input type="text" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
                       </div>
                       
-                      {/* Flex grid za savršeno poravnanje (Grad i Datum) */}
                       <div className="flex flex-col justify-end h-full space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Grad</label>
                         <select required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all appearance-none cursor-pointer mt-auto">
@@ -257,7 +261,6 @@ export function CartDrawer() {
                         <input type="date" min={minDateString} value={formData.deliveryDate} onChange={(e) => setFormData({...formData, deliveryDate: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all text-gray-600 mt-auto" />
                       </div>
                       
-                      {/* Napomena za datum */}
                       <div className="col-span-2">
                          <p className="text-[10px] text-brand-pink font-semibold italic text-right">* Isporuka nije moguća za isti dan (min. 24h)</p>
                       </div>
