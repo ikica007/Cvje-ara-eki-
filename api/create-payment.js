@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Plaćanje trenutno nije dostupno.' });
   }
 
-  const { amount, customer, items } = req.body ?? {};
+  const { amount, customer, delivery, items } = req.body ?? {};
 
   const centi = Math.round((amount || 0) * 100);
 
@@ -44,10 +44,22 @@ export default async function handler(req, res) {
   const ime = dijelovi[0] || '';
   const prezime = dijelovi.slice(1).join(' ') || '';
 
-  let opis = 'Narudžba sa sajta';
-  if (items && items.length > 0) {
-    opis = items.map(i => `${i.quantity}x ${i.name}`).join(', ').slice(0, 100);
-  }
+  // Lista stavki (buketi/aranžmani)
+  const stavke = items && items.length > 0
+    ? items.map(i => `${i.quantity}x ${i.name}`).join(', ')
+    : 'Narudžba sa sajta';
+
+  // U description upisujemo SVE — narudžbu, primaoca i adresu —
+  // jer je to jedino polje koje Finrelay vraća netaknuto u webhooku.
+  // Format: NARUDŽBA || PRIMALAC || ADRESA || GRAD || PORUKA
+  const opisDijelovi = [
+    stavke,
+    delivery?.recipientName ? `Primalac: ${delivery.recipientName}` : '',
+    delivery?.address ? `Adresa: ${delivery.address}` : '',
+    delivery?.city ? `Grad: ${delivery.city}` : '',
+  ].filter(Boolean);
+
+  const opis = opisDijelovi.join(' | ').slice(0, 100);
 
   const reference = `CS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const successLink = `${env.siteUrl}/?payment=success&ref=${reference}`;
@@ -113,8 +125,8 @@ export default async function handler(req, res) {
       customer_last_name: cist(prezime, 100),
       customer_email: cist(customer.email, 200),
       customer_phone_number: cist(customer.phone, 20),
-      customer_address: cist(customer.address, 200),
-      customer_city: cist(customer.city, 100),
+      customer_address: cist(delivery?.address || customer.address, 200),
+      customer_city: cist(delivery?.city || customer.city, 100),
       customer_country: 'ME',
       customer_postal_code: cist(customer.postalCode, 20),
     };
