@@ -3,25 +3,30 @@ import { useCart } from '../context/CartContext';
 import { X, Minus, Plus, Trash2, Truck, CreditCard } from 'lucide-react';
 
 export function CartDrawer() {
-  // Tvoji tačni podaci i kuke iz konteksta
   const { cart, removeFromCart, updateQuantity, totalPrice, isCartOpen, setIsCartOpen, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<'pouzecem' | 'karticom'>('karticom');
   const [orderSuccess, setOrderSuccess] = useState(false);
+  
+  // Sva podijeljena polja (Naručilac i Primalac)
   const [formData, setFormData] = useState({
-    name: '',
+    ordererName: '',
+    ordererPhone: '',
+    ordererEmail: '',
+    recipientName: '',
     address: '',
     city: 'Podgorica',
-    phone: '',
-    email: '',
-    postalCode: '',
+    message: '',
     deliveryDate: ''
   });
 
-  // Dodatni state za dizajn (koraci korpe i checkbox)
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // TVOJA ORIGINALNA LOGIKA ZA PLAĆANJE (NETAKNUTA)
+  // Izračunavanje sutrašnjeg datuma (za blokiranje istog dana)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDateString = tomorrow.toISOString().split('T')[0];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -35,12 +40,18 @@ export function CartDrawer() {
           body: JSON.stringify({
             amount: totalPrice,
             customer: {
-              name: formData.name,
+              name: formData.ordererName,
+              email: formData.ordererEmail,
+              phone: formData.ordererPhone,
+              address: formData.address,
+              city: formData.city
+            },
+            delivery: {
+              recipientName: formData.recipientName,
               address: formData.address,
               city: formData.city,
-              phone: formData.phone,
-              email: formData.email,
-              postalCode: formData.postalCode || '81000'
+              message: formData.message,
+              deliveryDate: formData.deliveryDate
             },
             items: cart.map(item => ({ name: item.name, quantity: item.quantity }))
           }),
@@ -74,14 +85,23 @@ export function CartDrawer() {
 
     // --- LOGIKA ZA PLAĆANJE POUZEĆEM (WhatsApp) ---
     let message = `Nova narudžba!\n\n`;
+    message += `*Podaci naručioca:*\n`;
+    message += `Ime i prezime: ${formData.ordererName}\n`;
+    message += `Telefon: +382 ${formData.ordererPhone}\n`;
+    message += `Email: ${formData.ordererEmail}\n\n`;
+    
     message += `*Podaci za dostavu:*\n`;
-    message += `Ime i prezime: ${formData.name}\n`;
+    message += `Primalac: ${formData.recipientName}\n`;
     message += `Adresa: ${formData.address}\n`;
     message += `Grad: ${formData.city}\n`;
-    message += `Telefon: +382 ${formData.phone}\n`;
+    
     if (formData.deliveryDate) {
       message += `Datum isporuke: ${formData.deliveryDate}\n`;
     }
+    if (formData.message) {
+      message += `Poruka uz buket: ${formData.message}\n`;
+    }
+    
     message += `\n*Stavke narudžbe:*\n`;
     cart.forEach(item => {
       message += `${item.quantity}x ${item.name} - ${(item.price * item.quantity).toFixed(2)} €\n`;
@@ -106,16 +126,13 @@ export function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Pozadina koja se zamagli */}
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
         onClick={handleClose} 
       />
       
-      {/* Glavni prozor korpe */}
       <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
         
-        {/* Zaglavlje (Header) */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <h2 className="text-xl font-serif font-semibold text-brand-dark flex items-center gap-2">
             <svg className="w-5 h-5 text-brand-pink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +145,6 @@ export function CartDrawer() {
           </button>
         </div>
         
-        {/* Središnji dio (Tijelo korpe) */}
         <div className="flex-1 overflow-y-auto bg-gray-50/50">
           {orderSuccess ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-4">
@@ -152,13 +168,11 @@ export function CartDrawer() {
             </div>
           ) : (
             <>
-              {/* Korak 1: Prikaz proizvoda */}
               {step === 'cart' ? (
                 <div className="p-6 space-y-4">
                   {cart.map((item) => (
                     <div key={item.id} className="flex gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                       <div className="w-20 h-20 bg-brand-light/30 rounded-xl overflow-hidden shrink-0">
-                        {/* Placeholder ako proizvod nema sliku, inače prikazuje njegovu */}
                         <img src={(item as any).image || 'https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?auto=format&fit=crop&q=80'} alt={item.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 flex flex-col justify-between">
@@ -185,41 +199,77 @@ export function CartDrawer() {
                   ))}
                 </div>
               ) : (
-                /* Korak 2: Forma za naplatu */
                 <form id="checkout-form" onSubmit={handleSubmit} className="p-6 space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2 space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ime i prezime</label>
-                      <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                    </div>
-                    <div className="col-span-2 space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Adresa isporuke</label>
-                      <input type="text" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Grad</label>
-                      <select required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all appearance-none cursor-pointer">
-                        <option value="Podgorica">Podgorica</option>
-                        <option value="Bijelo Polje">Bijelo Polje</option>
-                        <option value="Bar">Bar</option>
-                        <option value="Budva">Budva</option>
-                        <option value="Tivat">Tivat</option>
-                        <option value="Kotor">Kotor</option>
-                        <option value="Nikšić">Nikšić</option>
-                        <option value="Berane">Berane</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Telefon</label>
-                      <input type="tel" required placeholder="+382 6X XXX XXX" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                    </div>
-                    <div className="col-span-2 space-y-1.5">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Datum isporuke (Opciono)</label>
-                      <input type="date" value={formData.deliveryDate} onChange={(e) => setFormData({...formData, deliveryDate: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all text-gray-600" />
+                  
+                  {/* PODACI NARUČIOCA */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Podaci naručioca</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Ime i prezime</label>
+                        <input type="text" required value={formData.ordererName} onChange={(e) => setFormData({...formData, ordererName: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Telefon</label>
+                        <div className="relative flex items-center">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-gray-500 font-semibold text-sm">+382</span>
+                          </div>
+                          <input type="tel" required placeholder="6X XXX XXX" value={formData.ordererPhone} onChange={(e) => setFormData({...formData, ordererPhone: e.target.value.replace(/\D/g, '')})} className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Email</label>
+                        <input type="email" required value={formData.ordererEmail} onChange={(e) => setFormData({...formData, ordererEmail: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-4">
+                  {/* PODACI ISPORUKE */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 pt-2">Podaci isporuke</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Ime i prezime primaoca</label>
+                        <input type="text" required value={formData.recipientName} onChange={(e) => setFormData({...formData, recipientName: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
+                      </div>
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Adresa isporuke</label>
+                        <input type="text" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
+                      </div>
+                      
+                      {/* Flex grid za savršeno poravnanje (Grad i Datum) */}
+                      <div className="flex flex-col justify-end h-full space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Grad</label>
+                        <select required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all appearance-none cursor-pointer mt-auto">
+                          <option value="Podgorica">Podgorica</option>
+                          <option value="Bijelo Polje">Bijelo Polje</option>
+                          <option value="Bar">Bar</option>
+                          <option value="Budva">Budva</option>
+                          <option value="Tivat">Tivat</option>
+                          <option value="Kotor">Kotor</option>
+                          <option value="Nikšić">Nikšić</option>
+                          <option value="Berane">Berane</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col justify-end h-full space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block leading-tight">Datum isporuke (Opciono)</label>
+                        <input type="date" min={minDateString} value={formData.deliveryDate} onChange={(e) => setFormData({...formData, deliveryDate: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all text-gray-600 mt-auto" />
+                      </div>
+                      
+                      {/* Napomena za datum */}
+                      <div className="col-span-2">
+                         <p className="text-[10px] text-brand-pink font-semibold italic text-right">* Isporuka nije moguća za isti dan (min. 24h)</p>
+                      </div>
+
+                      <div className="col-span-2 space-y-1.5 pt-1">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Poruka uz buket (Opciono)</label>
+                        <textarea rows={2} placeholder="Npr. Srećan rođendan!" value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all resize-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-gray-100">
                     <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Način plaćanja</h3>
                     
                     <label className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === 'pouzecem' ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
@@ -255,7 +305,6 @@ export function CartDrawer() {
                     </label>
                   </div>
 
-                  {/* Poseban checkbox sa porukom o kvarenju cvijeća */}
                   <label className="flex items-start gap-3 mt-6 cursor-pointer group">
                     <div className="relative flex items-center justify-center mt-0.5">
                       <input type="checkbox" required checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="peer sr-only" />
@@ -275,7 +324,6 @@ export function CartDrawer() {
           )}
         </div>
 
-        {/* Donji fiksirani Footer sa dugmićima */}
         {cart.length > 0 && !orderSuccess && (
           <div className="border-t border-gray-100 p-6 bg-white shrink-0">
             <div className="flex justify-between items-end mb-6">
