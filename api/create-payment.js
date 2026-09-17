@@ -44,19 +44,18 @@ export default async function handler(req, res) {
   const ime = dijelovi[0] || '';
   const prezime = dijelovi.slice(1).join(' ') || '';
 
-  // Lista stavki (buketi/aranžmani)
   const stavke = items && items.length > 0
     ? items.map(i => `${i.quantity}x ${i.name}`).join(', ')
     : 'Narudžba sa sajta';
 
-  // U description upisujemo SVE — narudžbu, primaoca i adresu —
-  // jer je to jedino polje koje Finrelay vraća netaknuto u webhooku.
-  // Format: NARUDŽBA || PRIMALAC || ADRESA || GRAD || PORUKA
   const opisDijelovi = [
     stavke,
     delivery?.recipientName ? `Primalac: ${delivery.recipientName}` : '',
+    delivery?.recipientPhone ? `Tel: ${delivery.recipientPhone}` : '',
     delivery?.address ? `Adresa: ${delivery.address}` : '',
     delivery?.city ? `Grad: ${delivery.city}` : '',
+    delivery?.date ? `Datum: ${delivery.date}` : '',
+    delivery?.message ? `Poruka: ${delivery.message}` : '',
   ].filter(Boolean);
 
   const opis = opisDijelovi.join(' | ').slice(0, 100);
