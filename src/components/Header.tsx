@@ -1,259 +1,272 @@
-import { Phone, Menu, X, ShoppingBag, ArrowRight } from 'lucide-react';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingBag, Menu, X, ArrowRight, Instagram, MapPin, Phone, Mail } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
+import cvjecaraLogo from '../logo-cvjecara.jpg';
 
-interface HeaderProps {
-  onSelectCategory?: (category: string) => void;
-}
+export function Header() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { cart, setIsCartOpen } = useCart();
+  
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-export function Header({ onSelectCategory }: HeaderProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { totalItems, setIsCartOpen } = useCart();
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  const handleNavClick = (category: string) => {
-    if (onSelectCategory) {
-      onSelectCategory(category);
+  // Kad se otvori meni, sprečavamo scroll pozadine
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-    setIsMenuOpen(false);
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isMobileMenuOpen]);
+
+  const scrollToTop = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsMobileMenuOpen(false);
   };
 
-  const arrangementCategories = [
-    { id: 'xl-buketi', num: '01', name: 'XL-XXXL Buketi' },
-    { id: 'buketi', num: '02', name: 'Buketi' },
-    { id: 'korpe', num: '03', name: 'Aranžmani u Korpama' },
-    { id: 'box', num: '04', name: 'Box Aranžmani' },
-    { id: '101-ruza', num: '05', name: 'Aranžmani 101 Ruža' },
-    { id: 'slatki', num: '06', name: 'Slatki Aranžmani' },
-    { id: 'kinder', num: '07', name: 'Kinder Aranžmani' },
-  ];
+  const menuVariants = {
+    closed: { 
+      opacity: 0,
+      y: "-100%",
+      transition: { duration: 0.5, ease: [0.76, 0, 0.24, 1] }
+    },
+    open: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5, ease: [0.76, 0, 0.24, 1] }
+    }
+  };
 
-  const decorationCategories = [
-    { id: 'svadbene', num: '01', name: 'Svadbene Dekoracije' },
-    { id: 'rodjendani', num: '02', name: 'Rođendanske Dekoracije' },
-    { id: 'events', num: '03', name: 'Svečani Events' },
+  const linkVariants = {
+    closed: { opacity: 0, y: 20 },
+    open: (i: number) => ({
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        delay: 0.1 + (i * 0.05),
+        duration: 0.4,
+        ease: [0.33, 1, 0.68, 1]
+      }
+    })
+  };
+
+  const navLinks = [
+    { href: '#shop', label: 'Prodavnica' },
+    { href: '#usluge', label: 'Usluge' },
+    { href: '#galerija', label: 'Galerija' },
+    { href: '#kontakt', label: 'Kontakt' }
   ];
 
   return (
     <>
-      <motion.header 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed w-full top-0 z-50 transition-all duration-300 bg-brand-light/95 backdrop-blur-md border-b border-brand-beige/60 shadow-[0_2px_15px_-3px_rgba(140,109,88,0.05)]"
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }}
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-brand-light/95 backdrop-blur-md shadow-sm py-4' 
+            : 'bg-transparent py-6'
+        }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => onSelectCategory && onSelectCategory('home')}
-                className="serif text-2xl tracking-wide font-bold text-brand-dark hover:text-brand-pink transition-colors"
-              >
-                Cvjećara <span className="italic font-serif text-brand-pink">Šćekić</span>
-              </button>
+        <div className="container mx-auto px-6 lg:px-12 flex items-center justify-between">
+          
+          {/* Logo (Lijevo) */}
+          <a href="#" onClick={scrollToTop} className="flex items-center gap-3 z-50 group">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-brand-pink/30 group-hover:border-brand-pink transition-colors">
+              <img src={cvjecaraLogo} alt="Cvjećara Šćekić Logo" className="w-full h-full object-cover" />
             </div>
-            
-            <nav className="hidden md:flex gap-8 text-[11px] text-brand-dark/90 uppercase tracking-[0.2em] font-bold">
-              <a href="#o-nama" className="hover:text-brand-teal transition-colors" onClick={() => handleNavClick('home')}>O nama</a>
-              <a href="#usluge" className="hover:text-brand-teal transition-colors" onClick={() => handleNavClick('home')}>Usluge</a>
-              <a href="#galerija" className="hover:text-brand-teal transition-colors" onClick={() => handleNavClick('home')}>Galerija</a>
-              <a href="#recenzije" className="hover:text-brand-teal transition-colors" onClick={() => handleNavClick('home')}>Recenzije</a>
-            </nav>
-            
-            <div className="hidden md:flex items-center gap-4 text-xs font-semibold">
-              <a href="#kontakt" className="flex items-center gap-2 border border-brand-teal/40 text-brand-teal rounded-full px-5 py-2.5 hover:bg-brand-teal hover:text-brand-light transition-colors tracking-widest uppercase">
-                <Phone className="h-3.5 w-3.5" />
-                Kontakt
-              </a>
-              <button 
-                onClick={() => setIsCartOpen(true)}
-                className="flex items-center gap-2 border border-brand-beige rounded-full px-5 py-2.5 hover:border-brand-pink hover:text-brand-pink transition-colors tracking-widest uppercase relative"
-              >
-                <ShoppingBag className="h-4 w-4" />
-                Korpa
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-brand-pink text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">
-                    {totalItems}
-                  </span>
-                )}
-              </button>
+            <div className="flex flex-col">
+              <span className={`text-xl lg:text-2xl font-serif font-bold tracking-tight transition-colors duration-300 ${
+                isMobileMenuOpen ? 'text-brand-dark' : 'text-brand-dark'
+              }`}>
+                Cvjećara <span className="text-brand-pink italic font-light">Šćekić</span>
+              </span>
             </div>
+          </a>
 
-            {/* Mobile menu button & cart */}
-            <div className="md:hidden flex items-center gap-4">
-              <button 
-                onClick={() => setIsCartOpen(true)}
-                className="relative text-brand-dark p-2 hover:text-brand-pink transition-colors"
-                aria-label="Pregled korpe"
+          {/* Desktop Navigacija (Sredina) */}
+          <nav className="hidden md:flex items-center gap-10">
+            {navLinks.map((link) => (
+              <a 
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium tracking-widest uppercase text-brand-dark hover:text-brand-pink transition-colors relative group"
               >
-                <ShoppingBag className="h-6 w-6" />
+                {link.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-brand-pink transition-all duration-300 group-hover:w-full"></span>
+              </a>
+            ))}
+          </nav>
+
+          {/* Akcije (Desno) */}
+          <div className="flex items-center gap-4 z-50">
+            
+            {/* Korpa Dugme */}
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-brand-dark hover:text-brand-pink transition-colors"
+              aria-label="Otvori korpu"
+            >
+              <ShoppingBag className="w-6 h-6" strokeWidth={1.5} />
+              <AnimatePresence>
                 {totalItems > 0 && (
-                  <span className="absolute top-0 right-0 bg-brand-pink text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                  <motion.span 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -top-1 -right-1 bg-brand-pink text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
+                  >
                     {totalItems}
-                  </span>
+                  </motion.span>
                 )}
-              </button>
-              <button 
-                className="text-brand-dark p-2 focus:outline-none relative w-8 h-8 flex items-center justify-center"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label="Meni"
-              >
-                <motion.div
-                  animate={isMenuOpen ? "open" : "closed"}
-                  className="flex flex-col gap-1.5 justify-center items-center w-6 h-6"
-                >
-                  <motion.span 
-                    variants={{
-                      closed: { rotate: 0, y: 0 },
-                      open: { rotate: 45, y: 6.5 }
-                    }}
-                    transition={{ duration: 0.2 }}
-                    className="w-5 h-0.5 bg-brand-dark block rounded-full"
-                  />
-                  <motion.span 
-                    variants={{
-                      closed: { opacity: 1, scale: 1 },
-                      open: { opacity: 0, scale: 0 }
-                    }}
-                    transition={{ duration: 0.15 }}
-                    className="w-5 h-0.5 bg-brand-dark block rounded-full"
-                  />
-                  <motion.span 
-                    variants={{
-                      closed: { rotate: 0, y: 0 },
-                      open: { rotate: -45, y: -6.5 }
-                    }}
-                    transition={{ duration: 0.2 }}
-                    className="w-5 h-0.5 bg-brand-dark block rounded-full"
-                  />
-                </motion.div>
-              </button>
-            </div>
+              </AnimatePresence>
+            </button>
+
+            {/* Hamburger Meni (Samo Mobilni) */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 text-brand-dark hover:text-brand-pink transition-colors"
+              aria-label={isMobileMenuOpen ? "Zatvori meni" : "Otvori meni"}
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" strokeWidth={1.5} />
+              ) : (
+                <Menu className="w-6 h-6" strokeWidth={1.5} />
+              )}
+            </button>
           </div>
         </div>
+      </motion.header>
 
-        {/* Mobile menu with AnimatePresence */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "calc(100vh - 80px)" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="md:hidden bg-brand-light/98 backdrop-blur-lg border-t border-brand-beige/80 absolute w-full left-0 overflow-y-auto z-40"
-            >
-              <div className="flex flex-col py-8 px-6 pb-12 gap-8">
-                {/* Primary Nav Section */}
-                <div>
-                  <p className="text-[10px] font-mono tracking-[0.25em] text-brand-dark/40 uppercase mb-4">Glavna navigacija</p>
-                  <nav className="grid grid-cols-2 gap-4">
-                    {[
-                      { href: '#o-nama', label: 'O Nama' },
-                      { href: '#usluge', label: 'Naše Usluge' },
-                      { href: '#galerija', label: 'Galerija Sika' },
-                      { href: '#recenzije', label: 'Utisci Kupaca' }
-                    ].map((link, index) => (
-                      <motion.a 
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        href={link.href} 
-                        className="bg-brand-beige/30 hover:bg-brand-beige/60 border border-brand-beige/50 rounded-2xl py-3.5 px-4 text-center text-xs font-bold tracking-widest uppercase text-brand-dark transition-all active:scale-95"
-                        onClick={() => handleNavClick('home')}
-                      >
-                        {link.label}
-                      </motion.a>
-                    ))}
-                  </nav>
-                </div>
-
-                {/* Categories Grid Section */}
-                <div className="border-t border-brand-beige/60 pt-6 space-y-6">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-[10px] font-mono tracking-[0.25em] text-brand-dark/40 uppercase">Cvjetni Aranžmani</p>
-                      <span className="text-[10px] font-serif italic text-brand-teal">Kupovina</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {arrangementCategories.map((cat, index) => (
-                        <motion.button
-                          key={cat.id}
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.05 + index * 0.02 }}
-                          onClick={(e) => { e.preventDefault(); handleNavClick(cat.id); }}
-                          className="group flex items-center justify-between bg-white hover:bg-brand-dark/5 border border-brand-beige/50 active:bg-brand-beige/40 rounded-xl p-3 text-left transition-all duration-300"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs text-brand-teal font-semibold bg-brand-teal/5 group-hover:bg-brand-teal group-hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-lg">
-                              {cat.num}
-                            </span>
-                            <span className="font-serif font-medium text-brand-dark text-sm group-hover:translate-x-1 transition-transform duration-300">
-                              {cat.name}
-                            </span>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-brand-teal/40 group-hover:text-brand-teal group-hover:translate-x-0.5 transition-all" />
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-[10px] font-mono tracking-[0.25em] text-brand-dark/40 uppercase">Naše Dekoracije</p>
-                      <span className="text-[10px] font-serif italic text-brand-pink">Event styling</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {decorationCategories.map((cat, index) => (
-                        <motion.button
-                          key={cat.id}
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.15 + index * 0.02 }}
-                          onClick={(e) => { e.preventDefault(); handleNavClick(cat.id); }}
-                          className="group flex items-center justify-between bg-brand-pink/5 hover:bg-brand-pink/10 border border-brand-pink/20 active:bg-brand-pink/20 rounded-xl p-3 text-left transition-all duration-300"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs text-brand-pink font-semibold bg-brand-pink/10 group-hover:bg-brand-pink group-hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-lg">
-                              {cat.num}
-                            </span>
-                            <span className="font-serif font-medium text-brand-dark text-sm group-hover:translate-x-1 transition-transform duration-300">
-                              {cat.name}
-                            </span>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-brand-pink/60 group-hover:text-brand-pink group-hover:translate-x-0.5 transition-all" />
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer section of menu */}
-                <div className="border-t border-brand-beige/60 pt-6 mt-2 flex flex-col gap-4 items-center">
-                  <div className="text-center">
-                    <p className="text-xs text-brand-dark/60 font-serif">Posjetite nas ili naručite dostavu</p>
-                    <p className="text-[10px] tracking-wider text-brand-pink font-semibold uppercase mt-0.5">Bijelo Polje, Crna Gora</p>
-                  </div>
-                  
-                  <motion.a 
-                    whileTap={{ scale: 0.95 }}
-                    href="#kontakt" 
-                    className="w-full flex items-center justify-center gap-2 bg-brand-teal text-white rounded-2xl py-4 hover:bg-brand-teal/90 transition-colors font-semibold tracking-widest text-xs uppercase shadow-sm"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Phone className="h-4 w-4" />
-                    Kontaktirajte Nas
-                  </motion.a>
+      {/* Moderni Full-Screen Mobilni Meni */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            variants={menuVariants}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            className="fixed inset-0 z-30 bg-[#FAF7F2] md:hidden overflow-y-auto"
+          >
+            <div className="min-h-screen pt-28 pb-12 px-6 flex flex-col">
+              
+              {/* Brzi linkovi - Grid layout */}
+              <div className="mb-10">
+                <motion.h4 
+                  custom={0} variants={linkVariants} initial="closed" animate="open"
+                  className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-dark/40 mb-6"
+                >
+                  Glavna navigacija
+                </motion.h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { href: '#o-nama', label: 'O Nama' },
+                    { href: '#usluge', label: 'Naše Usluge' },
+                    { href: '#galerija', label: 'Galerija Slika' },
+                    { href: '#recenzije', label: 'Utisci Kupaca' }
+                  ].map((link, index) => (
+                    <motion.a 
+                      key={link.label}
+                      custom={index + 1} variants={linkVariants} initial="closed" animate="open"
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="bg-white/50 border border-brand-beige/30 rounded-2xl p-4 text-center hover:bg-white hover:border-brand-pink/30 hover:shadow-sm transition-all active:scale-95 flex flex-col items-center justify-center gap-2"
+                    >
+                      <span className="text-xs font-bold uppercase tracking-widest text-brand-dark">{link.label}</span>
+                    </motion.a>
+                  ))}
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.header>
+
+              {/* Prodavnica sekcija (Kategorije) */}
+              <div className="flex-1 relative">
+                {/* Dekorativni pozadinski tekst */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full">
+                  <span className="text-[5rem] font-serif italic text-brand-dark/[0.03] select-none whitespace-nowrap">
+                    Cvjećara
+                  </span>
+                </div>
+
+                <div className="relative z-10">
+                  <motion.div 
+                    custom={5} variants={linkVariants} initial="closed" animate="open"
+                    className="flex items-center justify-between mb-6"
+                  >
+                    <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-dark/40">
+                      Cvjetni aranžmani
+                    </h4>
+                    <span className="text-brand-pink italic text-sm font-serif">Kupovina</span>
+                  </motion.div>
+                  
+                  <div className="space-y-3">
+                    {[
+                      { href: '#shop', label: 'XL-XXXL Buketi', count: '01' },
+                      { href: '#shop', label: 'Buketi', count: '02' },
+                      { href: '#shop', label: 'Aranžmani u Korpama', count: '03' },
+                      { href: '#shop', label: 'Box Aranžmani', count: '04' },
+                      { href: '#shop', label: 'Aranžmani 101 Ruža', count: '05' }
+                    ].map((link, index) => (
+                      <motion.a
+                        key={link.label}
+                        custom={index + 6} variants={linkVariants} initial="closed" animate="open"
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="group flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-brand-beige/20 hover:border-brand-pink/30 transition-all active:scale-[0.98]"
+                      >
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs font-bold text-brand-teal bg-brand-teal/10 px-2 py-1 rounded-md">{link.count}</span>
+                          <span className="text-base text-brand-dark font-medium">{link.label}</span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-brand-dark/30 group-hover:text-brand-pink transition-colors" />
+                      </motion.a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Kontakt info footer menija */}
+              <motion.div 
+                custom={12} variants={linkVariants} initial="closed" animate="open"
+                className="mt-12 pt-8 border-t border-brand-beige/50"
+              >
+                <div className="grid grid-cols-1 gap-4">
+                  <a href="tel:+38269108055" className="flex items-center gap-3 text-brand-dark/70 hover:text-brand-pink transition-colors p-2">
+                    <div className="w-8 h-8 rounded-full bg-brand-beige/30 flex items-center justify-center text-brand-dark">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium tracking-wide">+382 69 108 055</span>
+                  </a>
+                  <a href="https://www.instagram.com/cvjecara_scekic__/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-brand-dark/70 hover:text-brand-pink transition-colors p-2">
+                    <div className="w-8 h-8 rounded-full bg-brand-beige/30 flex items-center justify-center text-brand-dark">
+                      <Instagram className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium tracking-wide">@cvjecara_scekic__</span>
+                  </a>
+                  <div className="flex items-center gap-3 text-brand-dark/70 p-2">
+                    <div className="w-8 h-8 rounded-full bg-brand-beige/30 flex items-center justify-center text-brand-dark">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-medium tracking-wide">Podgorica, Crna Gora</span>
+                  </div>
+                </div>
+              </motion.div>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
-
