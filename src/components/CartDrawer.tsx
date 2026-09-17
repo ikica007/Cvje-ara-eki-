@@ -13,6 +13,7 @@ export function CartDrawer() {
     ordererPhone: '',
     ordererEmail: '',
     recipientName: '',
+    recipientPhone: '', // Dodato polje za telefon primaoca
     address: '',
     city: 'Podgorica',
     message: '',
@@ -48,6 +49,7 @@ export function CartDrawer() {
             },
             delivery: {
               recipientName: formData.recipientName,
+              phone: formData.recipientPhone, // Proslijeđen telefon primaoca API-ju
               address: formData.address,
               city: formData.city,
               message: formData.message,
@@ -92,6 +94,7 @@ export function CartDrawer() {
     
     message += `*Podaci za dostavu:*\n`;
     message += `Primalac: ${formData.recipientName}\n`;
+    message += `Telefon primaoca: ${formData.recipientPhone}\n`; // Dodato u poruku
     message += `Adresa: ${formData.address}\n`;
     message += `Grad: ${formData.city}\n`;
     
@@ -234,10 +237,29 @@ export function CartDrawer() {
                   <div className="space-y-4">
                     <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 pt-2">Podaci isporuke</h3>
                     <div className="grid grid-cols-2 gap-4">
+                      
                       <div className="col-span-2 space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Ime i prezime primaoca</label>
                         <input type="text" required value={formData.recipientName} onChange={(e) => setFormData({...formData, recipientName: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
                       </div>
+
+                      {/* DODATO POLJE: TELEFON PRIMAOCA */}
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Telefon primaoca</label>
+                        <input 
+                          required
+                          type="tel" 
+                          placeholder="+382 6X XXX XXX"
+                          value={formData.recipientPhone}
+                          onChange={e => {
+                            const val = e.target.value.replace(/[^\d\s+-]/g, '');
+                            setFormData({...formData, recipientPhone: val});
+                          }}
+                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all"
+                        />
+                      </div>
+                      {/* KRAJ DODATOG POLJA */}
+
                       <div className="col-span-2 space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Adresa isporuke</label>
                         <input type="text" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
