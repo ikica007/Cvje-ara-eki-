@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Menu, X, ArrowRight, Instagram, MapPin, Phone, Mail } from 'lucide-react';
+import { ShoppingBag, Menu, X, ArrowRight, Instagram, MapPin, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
-import cvjecaraLogo from '../logo-cvjecara.jpg';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -85,7 +84,7 @@ export function Header() {
           {/* Logo (Lijevo) */}
           <a href="#" onClick={scrollToTop} className="flex items-center gap-3 z-50 group">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-brand-pink/30 group-hover:border-brand-pink transition-colors">
-              <img src={cvjecaraLogo} alt="Cvjećara Šćekić Logo" className="w-full h-full object-cover" />
+              <img src="/logo-cvjecara.jpg" alt="Cvjećara Šćekić Logo" className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col">
               <span className={`text-xl lg:text-2xl font-serif font-bold tracking-tight transition-colors duration-300 ${
