@@ -7,13 +7,12 @@ export function CartDrawer() {
   const [paymentMethod, setPaymentMethod] = useState<'pouzecem' | 'karticom'>('karticom');
   const [orderSuccess, setOrderSuccess] = useState(false);
   
-  // Sva podijeljena polja (Naručilac i Primalac)
   const [formData, setFormData] = useState({
     ordererName: '',
     ordererPhone: '',
     ordererEmail: '',
     recipientName: '',
-    recipientPhone: '', // Dodato polje za telefon primaoca
+    recipientPhone: '',
     address: '',
     city: 'Podgorica',
     message: '',
@@ -23,7 +22,6 @@ export function CartDrawer() {
   const [step, setStep] = useState<'cart' | 'checkout'>('cart');
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // Izračunavanje sutrašnjeg datuma (za blokiranje istog dana)
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const minDateString = tomorrow.toISOString().split('T')[0];
@@ -33,6 +31,40 @@ export function CartDrawer() {
     
     if (paymentMethod === 'karticom') {
       try {
+        // Šaljemo email sa svim detaljima ODMAH, prije Finrelay redirecta
+        const orderRef = `CS-${Date.now()}`;
+        try {
+          await fetch('/api/send-order-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reference: orderRef,
+              amount: totalPrice,
+              customer: {
+                name: formData.ordererName,
+                email: formData.ordererEmail,
+                phone: formData.ordererPhone,
+              },
+              delivery: {
+                recipientName: formData.recipientName,
+                recipientPhone: formData.recipientPhone,
+                address: formData.address,
+                city: formData.city,
+                date: formData.deliveryDate,
+                message: formData.message,
+              },
+              items: cart.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+            }),
+          });
+        } catch (emailErr) {
+          console.error('Email greška:', emailErr);
+          // Ne blokiramo plaćanje ako email ne pošalje
+        }
+
         const response = await fetch('/api/create-payment', {
           method: 'POST',
           headers: {
@@ -49,7 +81,7 @@ export function CartDrawer() {
             },
             delivery: {
               recipientName: formData.recipientName,
-              phone: formData.recipientPhone, // Proslijeđen telefon primaoca API-ju
+              phone: formData.recipientPhone,
               address: formData.address,
               city: formData.city,
               message: formData.message,
@@ -94,7 +126,7 @@ export function CartDrawer() {
     
     message += `*Podaci za dostavu:*\n`;
     message += `Primalac: ${formData.recipientName}\n`;
-    message += `Telefon primaoca: ${formData.recipientPhone}\n`; // Dodato u poruku
+    message += `Telefon primaoca: ${formData.recipientPhone}\n`;
     message += `Adresa: ${formData.address}\n`;
     message += `Grad: ${formData.city}\n`;
     
@@ -147,7 +179,7 @@ export function CartDrawer() {
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto bg-gray-50/50">
           {orderSuccess ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center space-y-4">
@@ -203,7 +235,7 @@ export function CartDrawer() {
                 </div>
               ) : (
                 <form id="checkout-form" onSubmit={handleSubmit} className="p-6 space-y-6">
-                  
+
                   {/* PODACI NARUČIOCA */}
                   <div className="space-y-4">
                     <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Podaci naručioca</h3>
@@ -214,17 +246,7 @@ export function CartDrawer() {
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Telefon</label>
-                        <input 
-                          required
-                          type="tel" 
-                          placeholder="+382 6X XXX XXX"
-                          value={formData.ordererPhone}
-                          onChange={e => {
-                            const val = e.target.value.replace(/[^\d\s+-]/g, '');
-                            setFormData({...formData, ordererPhone: val});
-                          }}
-                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all"
-                        />
+                        <input required type="tel" placeholder="+382 6X XXX XXX" value={formData.ordererPhone} onChange={e => { const val = e.target.value.replace(/[^\d\s+-]/g, ''); setFormData({...formData, ordererPhone: val}); }} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Email</label>
@@ -237,34 +259,18 @@ export function CartDrawer() {
                   <div className="space-y-4">
                     <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 pt-2">Podaci isporuke</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      
                       <div className="col-span-2 space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Ime i prezime primaoca</label>
                         <input type="text" required value={formData.recipientName} onChange={(e) => setFormData({...formData, recipientName: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
                       </div>
-
-                      {/* DODATO POLJE: TELEFON PRIMAOCA */}
                       <div className="col-span-2 space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Telefon primaoca</label>
-                        <input 
-                          required
-                          type="tel" 
-                          placeholder="+382 6X XXX XXX"
-                          value={formData.recipientPhone}
-                          onChange={e => {
-                            const val = e.target.value.replace(/[^\d\s+-]/g, '');
-                            setFormData({...formData, recipientPhone: val});
-                          }}
-                          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all"
-                        />
+                        <input required type="tel" placeholder="+382 6X XXX XXX" value={formData.recipientPhone} onChange={e => { const val = e.target.value.replace(/[^\d\s+-]/g, ''); setFormData({...formData, recipientPhone: val}); }} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
                       </div>
-                      {/* KRAJ DODATOG POLJA */}
-
                       <div className="col-span-2 space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Adresa isporuke</label>
                         <input type="text" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
                       </div>
-                      
                       <div className="flex flex-col justify-end h-full space-y-1.5">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Grad</label>
                         <select required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all appearance-none cursor-pointer mt-auto">
@@ -282,11 +288,9 @@ export function CartDrawer() {
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block leading-tight">Datum isporuke (Opciono)</label>
                         <input type="date" min={minDateString} value={formData.deliveryDate} onChange={(e) => setFormData({...formData, deliveryDate: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all text-gray-600 mt-auto" />
                       </div>
-                      
                       <div className="col-span-2">
-                         <p className="text-[10px] text-brand-pink font-semibold italic text-right">* Isporuka nije moguća za isti dan (min. 24h)</p>
+                        <p className="text-[10px] text-brand-pink font-semibold italic text-right">* Isporuka nije moguća za isti dan (min. 24h)</p>
                       </div>
-
                       <div className="col-span-2 space-y-1.5 pt-1">
                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Poruka uz buket (Opciono)</label>
                         <textarea rows={2} placeholder="Npr. Srećan rođendan!" value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all resize-none" />
@@ -296,7 +300,6 @@ export function CartDrawer() {
 
                   <div className="space-y-3 pt-4 border-t border-gray-100">
                     <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Način plaćanja</h3>
-                    
                     <label className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === 'pouzecem' ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
                       <input type="radio" name="payment" value="pouzecem" checked={paymentMethod === 'pouzecem'} onChange={() => setPaymentMethod('pouzecem')} className="sr-only" />
                       <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${paymentMethod === 'pouzecem' ? 'border-brand-pink' : 'border-gray-300'}`}>
@@ -312,7 +315,6 @@ export function CartDrawer() {
                         </p>
                       </div>
                     </label>
-
                     <label className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === 'karticom' ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
                       <input type="radio" name="payment" value="karticom" checked={paymentMethod === 'karticom'} onChange={() => setPaymentMethod('karticom')} className="sr-only" />
                       <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${paymentMethod === 'karticom' ? 'border-brand-pink' : 'border-gray-300'}`}>
@@ -355,7 +357,6 @@ export function CartDrawer() {
               <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ukupno</span>
               <span className="text-2xl font-serif font-bold text-brand-dark">{totalPrice.toFixed(2)} €</span>
             </div>
-            
             {step === 'cart' ? (
               <button onClick={() => setStep('checkout')} className="w-full bg-brand-dark text-white py-4 rounded-full font-bold tracking-wide hover:bg-brand-pink transition-all shadow-lg shadow-brand-dark/20 flex justify-center items-center gap-2">
                 NASTAVI NA PLAĆANJE
