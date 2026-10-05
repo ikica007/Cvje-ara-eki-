@@ -1,30 +1,21 @@
-import { Instagram, Facebook, MapPin, Phone, Mail } from 'lucide-react';
+import React from 'react';
+import { MapPin, Phone, Mail, Instagram, Facebook } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer id="kontakt" className="bg-brand-dark text-brand-light pt-20 pb-10 border-t border-brand-beige/25 relative overflow-hidden">
-      {/* Decorative leaf/botanical elements or subtle organic blurs */}
-      <div className="absolute top-0 left-0 w-80 h-80 rounded-full bg-brand-teal/5 blur-3xl pointer-events-none" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+    <footer id="kontakt" className="bg-[#1C1618] text-brand-light pt-20 pb-12 border-t border-brand-light/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div className="lg:col-span-2">
-            <span className="cursive text-4xl text-brand-pink block mb-2 font-normal tracking-wide">
-              Agencija za dekoraciju & event styling
-            </span>
-            <h3 className="serif text-4xl mb-6 font-semibold">
+            <span className="text-2xl font-serif font-bold tracking-wider text-brand-light block mb-4">
               Cvjećara <span className="italic font-serif text-brand-pink">Šćekić</span>
-            </h3>
-            <p className="font-serif font-light text-brand-light/80 max-w-sm mb-6 leading-relaxed text-base">
-              Unesite ljepotu u svoje posebne trenutke. Kreativni aranžmani, profesionalna usluga i online rezervacije za sva vaša dešavanja.
+            </span>
+            <p className="text-brand-light/80 font-serif font-light max-w-sm mb-6 leading-relaxed">
+              Unosimo ljepotu, mirise i emocije u svaki vaš poseban trenutak. Vaša omiljena cvjećara u Bijelom Polju sa tradicijom i ljubavlju prema detaljima.
             </p>
-            <div className="mb-8 p-4 rounded-xl bg-brand-light/5 border border-brand-light/10 inline-block">
-              <p className="text-sm font-semibold text-brand-pink mb-2 uppercase tracking-widest">Radno vrijeme</p>
-              <p className="text-sm font-light text-brand-light/90">Pon–Sub: 08–19h</p>
-              <p className="text-sm font-light text-brand-light/90">Nedelja: 08–12h</p>
-            </div>
-            <div className="flex flex-wrap gap-4 mt-6">
+            <div className="flex flex-wrap gap-4">
               <a
-                href="https://www.instagram.com/cvjecarascekic"
+                href="https://www.instagram.com/scekic_cvjecara/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex items-center gap-3 border border-brand-pink/40 text-brand-light rounded-full px-7 py-3 hover:bg-brand-pink hover:text-brand-light transition-all duration-300 font-semibold text-xs uppercase tracking-widest"
@@ -50,7 +41,7 @@ export function Footer() {
                 <MapPin className="h-5 w-5 text-brand-pink shrink-0 mt-0.5" />
                 <div className="text-sm space-y-2">
                   <p><strong className="text-brand-pink font-semibold">BP Cvjećara 1:</strong><br />ul. Petra Cetinjskog 52</p>
-                  <p><strong className="text-brand-pink font-semibold">BP Cvjećara 2:</strong><br />Centar grada, Bijelo Polje</p>
+                  <p><strong className="text-brand-pink font-semibold">BP Cvjećara 2:</strong><br />ulica Tršova, Centar grada, Bijelo Polje</p>
                 </div>
               </li>
               <li className="flex flex-col gap-3 pt-2">
@@ -111,10 +102,17 @@ export function Footer() {
             </div>
           </div>
           <div className="bg-brand-light/5 p-2 rounded-3xl border border-brand-light/10">
-            <h4 className="text-center font-serif text-brand-pink mb-3 text-sm tracking-wide">Cvjećara 2 - Centar grada, Bijelo Polje</h4>
+            <a
+              href="https://www.google.com/maps?q=43.03417165736971,19.749099243858147"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-center font-serif text-brand-pink hover:text-brand-light transition-colors mb-3 text-sm tracking-wide"
+            >
+              Cvjećara 2 - ulica Tršova, Centar grada ↗
+            </a>
             <div className="w-full h-64 rounded-2xl overflow-hidden relative">
               <iframe
-                src="https://maps.google.com/maps?q=Centar%20grada,%20Bijelo%20Polje&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                src="https://maps.google.com/maps?q=43.03417165736971,19.749099243858147&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 className="absolute top-0 left-0 w-full h-full border-0 grayscale-[20%] contrast-125"
                 allowFullScreen
                 loading="lazy">
