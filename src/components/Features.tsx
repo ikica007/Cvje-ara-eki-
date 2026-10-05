@@ -10,49 +10,49 @@ const arrangementCategories = [
     id: 'xl-buketi',
     title: "XL-XXXL Buketi",
     description: "Grandiozni buketi koji ostavljaju bez daha i govore više od hiljadu riječi.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353828/buketi_XL-XXXL14_hqlgxx.jpg",
+    image: "/images/buketi_XL-XXXL14_hqlgxx.jpg",
     num: "01"
   },
   {
     id: 'buketi',
     title: "Buketi",
     description: "Unikatni ručno rađeni buketi od najsvježijeg cvijeća za svaku priliku.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1783354823/buketi1_qr1ta5.jpg",
+    image: "/images/buketi1_qr1ta5.jpg",
     num: "02"
   },
   {
     id: 'korpe',
     title: "Aranžmani u korpama",
     description: "Bogati i raskošni cvjetni dizajni smješteni u pažljivo pletene ukrasne korpe.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1782991008/aranzmaniukorpama39_w6gz0c.jpg",
+    image: "/images/aranzmaniukorpama39_w6gz0c.jpg",
     num: "03"
   },
   {
     id: 'box',
     title: "Box Aranžmani",
     description: "Moderne cvjetne kutije koje odišu luksuzom i elegancijom u svakoj prilici.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1783353162/BOX35_cpa4bf.jpg",
+    image: "/images/BOX35_cpa4bf.jpg",
     num: "04"
   },
   {
     id: '101-ruza',
     title: "Aranžmani 101 ruža",
     description: "Klasičan simbol vječne ljubavi i romantike, pažljivo stilizovan do savršenstva.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358052/Screenshot_20250403_145830_Instagram_ilnikx.jpg",
+    image: "/images/Screenshot_20250403_145830_Instagram_ilnikx.jpg",
     num: "05"
   },
   {
     id: 'slatki',
     title: "Slatki Aranžmani",
     description: "Savršen spoj predivnog cvijeća i omiljenih slatkiša za najslađa iznenađenja.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1783358430/514517944_4070395216610883_7679488160219081152_n_pmwqzl.jpg",
+    image: "/images/514517944_4070395216610883_7679488160219081152_n_pmwqzl.jpg",
     num: "06"
   },
   {
     id: 'kinder',
     title: "Kinder Aranžmani",
     description: "Specijalno osmišljeni buketi prepuni čokoladica koji donose osmijeh na lice najmlađima.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1783356566/506000555_4050938558556549_3101156041541127873_n_femeuv.jpg",
+    image: "/images/506000555_4050938558556549_3101156041541127873_n_femeuv.jpg",
     num: "07"
   }
 ];
@@ -62,21 +62,21 @@ const decorationCategories = [
     id: 'svadbene',
     title: "Svadbene Dekoracije",
     description: "Transformišemo vaš poseban dan u bajku sa elegantnim cvjetnim aranžmanima, stolovima i detaljima.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1782905369/svadbene_dekoracije57_hswtwh.jpg",
+    image: "/images/svadbene_dekoracije57_hswtwh.jpg",
     num: "01"
   },
   {
     id: 'rodjendani',
     title: "Rođendanske Dekoracije",
     description: "Kreativne tematske postavke, stolići i baloni koji svaku proslavu čine nezaboravnom i čarobnom.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1783356900/665717241_4346460259004376_954715056274989287_n_eop9bm.jpg",
+    image: "/images/665717241_4346460259004376_954715056274989287_n_eop9bm.jpg",
     num: "02"
   },
   {
     id: 'events',
     title: "Events & Svečanosti",
     description: "Kompletna cvjetna dekoracija i event styling za korporativne događaje, proslave i ekskluzivne zabave.",
-    image: "https://res.cloudinary.com/de7gefkxl/image/upload/v1783359885/519628175_4089733331343738_5280612529917967343_n_wgksyg.jpg",
+    image: "/images/519628175_4089733331343738_5280612529917967343_n_wgksyg.jpg",
     num: "03"
   }
 ];

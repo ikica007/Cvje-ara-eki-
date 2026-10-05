@@ -7,7 +7,7 @@ export function Hero() {
       {/* Background image with high contrast warm rustic overlay */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://res.cloudinary.com/de7gefkxl/image/upload/v1783363776/WhatsApp_Image_2026-07-06_at_20.47.21_lrihsp.jpg" 
+          src="/images/WhatsApp_Image_2026-07-06_at_20.47.21_lrihsp.jpg" 
           alt="Cvjećara Šćekić Venčanje" 
           className="w-full h-full object-cover scale-105 filter brightness-90 contrast-95"
           referrerPolicy="no-referrer"

@@ -61,7 +61,7 @@ export function About() {
             className="order-1 md:order-2 relative aspect-[4/5] rounded-[2rem] overflow-hidden border border-brand-beige/80 shadow-[0_15px_30px_-15px_rgba(140,109,88,0.15)] bg-brand-beige"
           >
             <img 
-              src="https://res.cloudinary.com/de7gefkxl/image/upload/v1783361980/IMG_8192.JPG_gmr2zc.jpg" 
+              src="/images/IMG_8192.JPG_gmr2zc.jpg" 
               alt="O nama - Cvjećara Šćekić"
               className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-500"
             />
