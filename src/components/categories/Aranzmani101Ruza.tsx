@@ -21,7 +21,7 @@ const CLOUDINARY_IMAGES = [
   "/images/20250314_114823_erk51o.jpg",
   "/images/20250312_145259_qdxclt.jpg",
   "/images/1776926505558480_90616993-2e64-4e2c-a12b-b52205cb324b_ia2ptv.jpg",
-  "/images/17684943482563_649444f9-5a0f-4f64-bcd5-2f4dfa858ab1_ogveey.jpg"
+  /* "/images/17684943482563_649444f9-5a0f-4f64-bcd5-2f4dfa858ab1_ogveey.jpg" */
 ];
 
 export function Aranzmani101Ruza({ onBack }: Props) {
