@@ -30,7 +30,7 @@ export const CATEGORY_PRICES: Record<string, PriceData[]> = {
     p(80, "(komad)"), p(70), p(130), p(45), p(75),
     p(35, "(korpa)"), p(35), p(40), p(45), p(75),
     p(30), p(55), p(60), p(30), p(65),
-    p(50), p(35), p(90), p(80), p(30)
+    p(50), p(35), p(90), p(80), p(30), p(5)
   ],
 
   "Box Aranžmani": [
