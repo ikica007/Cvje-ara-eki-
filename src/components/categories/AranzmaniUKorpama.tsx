@@ -33,7 +33,7 @@ const CLOUDINARY_IMAGES = [
   "/images/aranzmaniukorpama39_w6gz0c.jpg",
   
   // Novi dodaci (slike koje su nedostajale) - one ce dobiti oznaku "Na upit"
-  /* /* "/images/aranzmaniukorpama6_a8g9zd.jpg",
+  /* "/images/aranzmaniukorpama6_a8g9zd.jpg",
   "/images/aranzmaniukorpama9_w7zjpy.jpg",
   "/images/aranzmaniukorpama11_x12fhb.jpg",
   "/images/aranzmaniukorpama12_rcc3tl.jpg",
@@ -46,7 +46,7 @@ const CLOUDINARY_IMAGES = [
   "/images/aranzmaniukorpama25_fnzbhv.jpg",
   "/images/aranzmaniukorpama28_gv2x8t.jpg",
   "/images/aranzmaniukorpama30_gnr0fr.jpg",
-  "/images/aranzmaniukorpama33_swyubk.jpg" */ */
+  "/images/aranzmaniukorpama33_swyubk.jpg" */
 ];
 
 export function AranzmaniUKorpama({ onBack }: Props) {
