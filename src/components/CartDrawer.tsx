@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { X, Minus, Plus, Trash2, Truck, CreditCard } from 'lucide-react';
+import { X, Minus, Plus, Trash2, Truck, CreditCard, Loader2, ShieldCheck, Globe } from 'lucide-react';
 
 export function CartDrawer() {
   const { cart, removeFromCart, updateQuantity, totalPrice, isCartOpen, setIsCartOpen, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<'pouzecem' | 'karticom'>('karticom');
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     ordererName: '',
@@ -28,6 +29,7 @@ export function CartDrawer() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     if (paymentMethod === 'karticom') {
       try {
@@ -109,10 +111,12 @@ export function CartDrawer() {
           window.location.href = data.redirectUrl;
         } else {
           alert("Greška: Server nije vratio link za plaćanje od banke.");
+          setIsLoading(false);
         }
       } catch (error: any) {
         console.error("Payment error:", error);
         alert(`Greška: ${error.message}`);
+        setIsLoading(false);
       }
       return;
     }
@@ -145,6 +149,7 @@ export function CartDrawer() {
     
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/38269108055?text=${encodedMessage}`, '_blank');
+    setIsLoading(false);
     setOrderSuccess(true);
     clearCart();
   };
@@ -154,6 +159,7 @@ export function CartDrawer() {
     setTimeout(() => {
       setStep('cart');
       setOrderSuccess(false);
+      setIsLoading(false);
     }, 300);
   };
 
@@ -218,123 +224,272 @@ export function CartDrawer() {
                           </button>
                         </div>
                         <div className="flex items-center justify-between mt-3">
-                          <span className="font-bold text-brand-pink">{item.price.toFixed(2)} €</span>
-                          <div className="flex items-center gap-3 bg-gray-50 rounded-full px-2 py-1 border border-gray-100">
-                            <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-brand-dark transition-colors">
-                              <Minus className="w-3 h-3" />
+                          <div className="flex items-center border border-gray-200 rounded-full bg-white">
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="p-1 hover:text-brand-pink text-gray-500 transition-colors"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
                             </button>
-                            <span className="text-sm font-semibold w-4 text-center">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-brand-dark transition-colors">
-                              <Plus className="w-3 h-3" />
+                            <span className="w-8 text-center text-xs font-semibold">{item.quantity}</span>
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="p-1 hover:text-brand-pink text-gray-500 transition-colors"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
                             </button>
                           </div>
+                          <span className="font-serif font-bold text-brand-dark text-sm">
+                            {(item.price * item.quantity).toFixed(2)} €
+                          </span>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <form id="checkout-form" onSubmit={handleSubmit} className="p-6 space-y-6">
-
-                  {/* PODACI NARUČIOCA */}
-                  <div className="space-y-4">
-                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Podaci naručioca</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2 space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Ime i prezime</label>
-                        <input type="text" required value={formData.ordererName} onChange={(e) => setFormData({...formData, ordererName: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Telefon</label>
-                        <input required type="tel" placeholder="+382 6X XXX XXX" value={formData.ordererPhone} onChange={e => { const val = e.target.value.replace(/[^\d\s+-]/g, ''); setFormData({...formData, ordererPhone: val}); }} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Email</label>
-                        <input type="email" required value={formData.ordererEmail} onChange={(e) => setFormData({...formData, ordererEmail: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                      </div>
+                <form id="checkout-form" onSubmit={handleSubmit} className="p-6 space-y-5">
+                  
+                  {/* INFORMATIVNI BANER ZA INOSTRANE NARUDŽBINE */}
+                  <div className="bg-brand-pink/10 border border-brand-pink/20 rounded-2xl p-4 flex gap-3 items-start">
+                    <Globe className="w-5 h-5 text-brand-pink shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-brand-dark uppercase tracking-wider mb-1">
+                        Poručujete iz inostranstva?
+                      </h4>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        Dobrodošli! Možete unijeti bilo koji inostrani broj telefona (sa prefiksom npr. <span className="font-mono font-medium text-brand-dark">+49, +1, +43, +381...</span>) i platiti bilo kojom Visa ili Mastercard karticom.
+                      </p>
                     </div>
                   </div>
 
-                  {/* PODACI ISPORUKE */}
-                  <div className="space-y-4">
-                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2 pt-2">Podaci isporuke</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2 space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Ime i prezime primaoca</label>
-                        <input type="text" required value={formData.recipientName} onChange={(e) => setFormData({...formData, recipientName: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                      </div>
-                      <div className="col-span-2 space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Telefon primaoca</label>
-                        <input required type="tel" placeholder="+382 6X XXX XXX" value={formData.recipientPhone} onChange={e => { const val = e.target.value.replace(/[^\d\s+-]/g, ''); setFormData({...formData, recipientPhone: val}); }} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                      </div>
-                      <div className="col-span-2 space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Adresa isporuke</label>
-                        <input type="text" required value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all" />
-                      </div>
-                      <div className="flex flex-col justify-end h-full space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Grad</label>
-                        <select required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all appearance-none cursor-pointer mt-auto">
-                          <option value="Podgorica">Podgorica</option>
-                          <option value="Bijelo Polje">Bijelo Polje</option>
-                          <option value="Bar">Bar</option>
-                          <option value="Budva">Budva</option>
-                          <option value="Tivat">Tivat</option>
-                          <option value="Kotor">Kotor</option>
-                          <option value="Nikšić">Nikšić</option>
-                          <option value="Berane">Berane</option>
-                        </select>
-                      </div>
-                      <div className="flex flex-col justify-end h-full space-y-1.5">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block leading-tight">Datum isporuke (Opciono)</label>
-                        <input type="date" min={minDateString} value={formData.deliveryDate} onChange={(e) => setFormData({...formData, deliveryDate: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all text-gray-600 mt-auto" />
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-[10px] text-brand-pink font-semibold italic text-right">* Isporuka nije moguća za isti dan (min. 24h)</p>
-                      </div>
-                      <div className="col-span-2 space-y-1.5 pt-1">
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Poruka uz buket (Opciono)</label>
-                        <textarea rows={2} placeholder="Npr. Srećan rođendan!" value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink outline-none transition-all resize-none" />
-                      </div>
+                  {/* 1. PODACI O NARUČIOCU */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">
+                      1. Vaši podaci (Naručilac)
+                    </h4>
+
+                    {/* Ime i prezime naručioca */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Vaše Ime i Prezime *
+                      </label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="npr. Marko Marković"
+                        value={formData.ordererName}
+                        onChange={(e) => setFormData({...formData, ordererName: e.target.value})}
+                        className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm transition-colors"
+                      />
+                      <span className="text-[10px] text-gray-400 mt-1 block">Unesite Vaše puno ime i prezime</span>
+                    </div>
+
+                    {/* Telefon naručioca */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Vaš Broj Telefona (Viber / WhatsApp) *
+                      </label>
+                      <input 
+                        type="tel" 
+                        required
+                        placeholder="npr. +382 69 123 456 ili +49 170 1234567"
+                        value={formData.ordererPhone}
+                        onChange={(e) => setFormData({...formData, ordererPhone: e.target.value})}
+                        className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm transition-colors"
+                      />
+                      <span className="text-[10px] text-brand-pink/90 font-medium mt-1 block">
+                        ✨ Može bilo koji inostrani ili domaći broj. Obavezno stavite pozivni (npr. +49, +43, +381...)
+                      </span>
+                    </div>
+
+                    {/* Email naručioca */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Vaša Email Adresa *
+                      </label>
+                      <input 
+                        type="email" 
+                        required
+                        placeholder="npr. marko@gmail.com"
+                        value={formData.ordererEmail}
+                        onChange={(e) => setFormData({...formData, ordererEmail: e.target.value})}
+                        className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm transition-colors"
+                      />
+                      <span className="text-[10px] text-gray-400 mt-1 block">Na ovu adresu stiže potvrda i račun</span>
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-4 border-t border-gray-100">
-                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Način plaćanja</h3>
-                    <label className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === 'pouzecem' ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
-                      <input type="radio" name="payment" value="pouzecem" checked={paymentMethod === 'pouzecem'} onChange={() => setPaymentMethod('pouzecem')} className="sr-only" />
-                      <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${paymentMethod === 'pouzecem' ? 'border-brand-pink' : 'border-gray-300'}`}>
-                        {paymentMethod === 'pouzecem' && <div className="w-2.5 h-2.5 bg-brand-pink rounded-full" />}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Truck className={`w-4 h-4 ${paymentMethod === 'pouzecem' ? 'text-brand-pink' : 'text-gray-400'}`} />
-                          <span className="font-bold text-sm text-brand-dark">PLAĆANJE POUZEĆEM</span>
-                        </div>
-                        <p className="text-xs text-gray-500 leading-relaxed">
-                          Iznos od {totalPrice.toFixed(2)} € plaćate gotovinom kuriru prilikom preuzimanja pošiljke. <strong className="font-medium text-gray-700">Cijena dostave je uračunata.</strong>
-                        </p>
-                      </div>
-                    </label>
-                    <label className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === 'karticom' ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
-                      <input type="radio" name="payment" value="karticom" checked={paymentMethod === 'karticom'} onChange={() => setPaymentMethod('karticom')} className="sr-only" />
-                      <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${paymentMethod === 'karticom' ? 'border-brand-pink' : 'border-gray-300'}`}>
-                        {paymentMethod === 'karticom' && <div className="w-2.5 h-2.5 bg-brand-pink rounded-full" />}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <CreditCard className={`w-4 h-4 ${paymentMethod === 'karticom' ? 'text-brand-pink' : 'text-gray-400'}`} />
-                          <span className="font-bold text-sm text-brand-dark">PLAĆANJE KARTICOM</span>
-                        </div>
-                        <p className="text-xs text-gray-500 leading-relaxed">
-                          Plaćanje platnom karticom na sajtu. (Nakon potvrde bićete preusmjereni na sigurno plaćanje)
-                        </p>
-                      </div>
-                    </label>
+                  {/* 2. PODACI O PRIMAOCU */}
+                  <div className="space-y-3 pt-2">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">
+                      2. Kome se dostavlja? (Primalac)
+                    </h4>
+
+                    {/* Ime i prezime primaoca */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Ime i Prezime Primaoca *
+                      </label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="npr. Jelena Jovanović"
+                        value={formData.recipientName}
+                        onChange={(e) => setFormData({...formData, recipientName: e.target.value})}
+                        className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm transition-colors"
+                      />
+                      <span className="text-[10px] text-gray-400 mt-1 block">Ime osobe kojoj kurir uručuje cvijeće</span>
+                    </div>
+
+                    {/* Telefon primaoca */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Broj Telefona Primaoca *
+                      </label>
+                      <input 
+                        type="tel" 
+                        required
+                        placeholder="npr. 067 123 456 ili +382 67 123 456"
+                        value={formData.recipientPhone}
+                        onChange={(e) => setFormData({...formData, recipientPhone: e.target.value})}
+                        className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm transition-colors"
+                      />
+                      <span className="text-[10px] text-gray-400 mt-1 block">Broj koji kurir poziva prije dolaska</span>
+                    </div>
+
+                    {/* Adresa dostave */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Ulica i Kućni Broj *
+                      </label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="npr. Bulevar Svetog Petra Cetinjskog 12, ulaz 2, stan 5"
+                        value={formData.address}
+                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                        className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm transition-colors"
+                      />
+                      <span className="text-[10px] text-gray-400 mt-1 block">Tačna adresa, ulaz, sprat ili naziv firme/bolnice</span>
+                    </div>
+
+                    {/* Grad */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Grad Isporuke *
+                      </label>
+                      <select 
+                        value={formData.city}
+                        onChange={(e) => setFormData({...formData, city: e.target.value})}
+                        className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm transition-colors"
+                      >
+                        <option value="Podgorica">Podgorica</option>
+                        <option value="Bijelo Polje">Bijelo Polje</option>
+                        <option value="Nikšić">Nikšić</option>
+                        <option value="Bar">Bar</option>
+                        <option value="Budva">Budva</option>
+                        <option value="Kotor">Kotor</option>
+                        <option value="Herceg Novi">Herceg Novi</option>
+                        <option value="Tivat">Tivat</option>
+                        <option value="Cetinje">Cetinje</option>
+                        <option value="Ulcinj">Ulcinj</option>
+                        <option value="Berane">Berane</option>
+                        <option value="Pljevlja">Pljevlja</option>
+                        <option value="Rožaje">Rožaje</option>
+                        <option value="Danilovgrad">Danilovgrad</option>
+                        <option value="Mojkovac">Mojkovac</option>
+                        <option value="Kolašin">Kolašin</option>
+                        <option value="Plav">Plav</option>
+                        <option value="Gusinje">Gusinje</option>
+                        <option value="Petnjica">Petnjica</option>
+                        <option value="Žabljak">Žabljak</option>
+                        <option value="Tuzi">Tuzi</option>
+                        <option value="Zeta">Zeta</option>
+                      </select>
+                      <span className="text-[10px] text-gray-400 mt-1 block">Izaberite grad u Crnoj Gori u koji dostavljamo</span>
+                    </div>
+
+                    {/* Datum dostave */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Željeni Datum Dostave
+                      </label>
+                      <input 
+                        type="date" 
+                        min={minDateString}
+                        value={formData.deliveryDate}
+                        onChange={(e) => setFormData({...formData, deliveryDate: e.target.value})}
+                        className="w-full text-sm px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm transition-colors"
+                      />
+                      <span className="text-[10px] text-gray-400 mt-1 block">Opciono: izaberite datum (najranije od sjutra)</span>
+                    </div>
+
+                    {/* Posveta / Poruka */}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Tekst Posvete uz Buket (Kartica)
+                      </label>
+                      <textarea 
+                        rows={3}
+                        placeholder="Napišite posvetu koja će biti ručno ispisana na ukrasnoj kartici..."
+                        value={formData.message}
+                        onChange={(e) => setFormData({...formData, message: e.target.value})}
+                        className="w-full text-sm px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-pink bg-white shadow-sm resize-none transition-colors"
+                      />
+                      <span className="text-[10px] text-gray-400 mt-1 block">Opciono: besplatna čestitka ide uz svaki aranžman</span>
+                    </div>
                   </div>
 
-                  <label className="flex items-start gap-3 mt-6 cursor-pointer group">
+                  {/* 3. NAČIN PLAĆANJA */}
+                  <div className="space-y-3 pt-2">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">
+                      3. Način plaćanja
+                    </h4>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Kartica */}
+                      <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'karticom' ? 'border-brand-pink bg-brand-pink/5 text-brand-dark' : 'border-gray-200 hover:border-gray-300 text-gray-500'}`}>
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          value="karticom" 
+                          checked={paymentMethod === 'karticom'} 
+                          onChange={() => setPaymentMethod('karticom')} 
+                          className="sr-only" 
+                        />
+                        <CreditCard className={`w-5 h-5 mb-1.5 ${paymentMethod === 'karticom' ? 'text-brand-pink' : 'text-gray-400'}`} />
+                        <span className="text-xs font-bold text-center">Platna kartica</span>
+                        <span className="text-[10px] text-gray-400 text-center mt-0.5">Finrelay (Visa / Master)</span>
+                      </label>
+
+                      {/* Pouzećem */}
+                      <label className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === 'pouzecem' ? 'border-brand-pink bg-brand-pink/5 text-brand-dark' : 'border-gray-200 hover:border-gray-300 text-gray-500'}`}>
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          value="pouzecem" 
+                          checked={paymentMethod === 'pouzecem'} 
+                          onChange={() => setPaymentMethod('pouzecem')} 
+                          className="sr-only" 
+                        />
+                        <Truck className={`w-5 h-5 mb-1.5 ${paymentMethod === 'pouzecem' ? 'text-brand-pink' : 'text-gray-400'}`} />
+                        <span className="text-xs font-bold text-center">Gotovina / Pouzećem</span>
+                        <span className="text-[10px] text-gray-400 text-center mt-0.5">Plaćanje kuriru</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* USLOVI */}
+                  <label className="flex items-start gap-3 cursor-pointer group mt-4">
                     <div className="relative flex items-center justify-center mt-0.5">
-                      <input type="checkbox" required checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="peer sr-only" />
+                      <input 
+                        type="checkbox" 
+                        required
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="peer sr-only"
+                      />
                       <div className="w-5 h-5 border-2 border-gray-300 rounded transition-all peer-checked:bg-brand-pink peer-checked:border-brand-pink"></div>
                       <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -353,22 +508,67 @@ export function CartDrawer() {
 
         {cart.length > 0 && !orderSuccess && (
           <div className="border-t border-gray-100 p-6 bg-white shrink-0">
-            <div className="flex justify-between items-end mb-6">
+            <div className="flex justify-between items-end mb-4">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ukupno</span>
               <span className="text-2xl font-serif font-bold text-brand-dark">{totalPrice.toFixed(2)} €</span>
             </div>
+
             {step === 'cart' ? (
-              <button onClick={() => setStep('checkout')} className="w-full bg-brand-dark text-white py-4 rounded-full font-bold tracking-wide hover:bg-brand-pink transition-all shadow-lg shadow-brand-dark/20 flex justify-center items-center gap-2">
+              <button 
+                onClick={() => setStep('checkout')} 
+                className="w-full bg-brand-dark text-white py-4 rounded-full font-bold tracking-wide hover:bg-brand-pink transition-all shadow-lg shadow-brand-dark/20 flex justify-center items-center gap-2"
+              >
                 NASTAVI NA PLAĆANJE
               </button>
             ) : (
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setStep('cart')} className="px-6 py-4 rounded-full border border-gray-200 text-gray-600 font-bold text-sm tracking-wide hover:bg-gray-50 transition-colors">
-                  NAZAD
-                </button>
-                <button type="submit" form="checkout-form" className="flex-1 bg-brand-dark text-white py-4 rounded-full font-bold text-sm tracking-wide hover:bg-brand-pink transition-all shadow-lg shadow-brand-dark/20 text-center">
-                  POTVRDI NARUDŽBU
-                </button>
+              <div className="space-y-3">
+                {/* FINRELAY OBAVJEŠTENJE DA SE SAČEKA UČITAVANJE */}
+                {paymentMethod === 'karticom' && (
+                  <div className="bg-amber-500/10 border border-amber-500/25 rounded-xl p-3 text-left">
+                    <div className="flex items-start gap-2.5">
+                      <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-amber-950 leading-relaxed">
+                        <strong className="font-semibold text-amber-900">Napomena za Finrelay:</strong> Nakon klika na dugme, <strong>molimo sačekajte par sekundi</strong> dok se sistem poveže sa bankom i otvori formu za plaćanje karticom.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button 
+                    type="button" 
+                    disabled={isLoading}
+                    onClick={() => setStep('cart')} 
+                    className="px-6 py-4 rounded-full border border-gray-200 text-gray-600 font-bold text-sm tracking-wide hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    NAZAD
+                  </button>
+                  <button 
+                    type="submit" 
+                    form="checkout-form" 
+                    disabled={
+                      isLoading ||
+                      !formData.ordererName ||
+                      !formData.ordererPhone ||
+                      !formData.ordererEmail ||
+                      !formData.recipientName ||
+                      !formData.recipientPhone ||
+                      !formData.address ||
+                      !formData.city ||
+                      !termsAccepted
+                    }
+                    className="flex-1 bg-brand-dark text-white py-4 rounded-full font-bold text-sm tracking-wide hover:bg-brand-pink transition-all shadow-lg shadow-brand-dark/20 text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Učitavanje Finrelay-a...</span>
+                      </>
+                    ) : (
+                      <span>{paymentMethod === 'karticom' ? 'POTVRDI I PLATI (FINRELAY)' : 'POTVRDI NARUDŽBU'}</span>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>
